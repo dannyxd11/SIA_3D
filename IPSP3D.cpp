@@ -18,7 +18,7 @@ public:
 
     Matrix(){   };
 
-    Matrix(int newWidth, int newHeight, double *newElements) : width(newWidth), height(newHeight), elements(newElements){    }
+    Matrix(int newWidth, int newHeight, double *newElements) : width(newWidth), height(newHeight), elements(newElements), depth(1){    }
 
     Matrix(int newWidth, int newHeight, int newDepth, double *newElements): width(newWidth), height(newHeight), depth(newDepth), elements(newElements){    }
 
