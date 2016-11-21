@@ -154,8 +154,21 @@ void IP3d(double* re, int* reDimensions, double* v1, int* v1Dimensions, double* 
     int* v1TransDimensions = new int[3];
     transpose(v1, v1Dimensions, v1Trans, v1TransDimensions);
 
-    // double *b1;// = new double[reDimensions[0] * reDimensions[1]];
-    //int* b1Dimensions = new int[3];
+    //Declaration & Initialization of variables
+    double *b1;
+    int* b1Dimensions = new int[3];
+
+    double* aMatrix = new double[b1Dimensions[0] * v1TransDimensions[1]];
+    int* aMatrixDimensions = new int[3];
+
+    double* calcMatrix = new double[v2Dimensions[0] * aMatrixDimensions[1]];
+    int* calcMatrixDimensions = new int[3];
+
+    double* eleMultMatrix = new double[v2Dimensions[0] * aMatrixDimensions[1]];
+    int* eleMultMatrixDimensions = new int[3];
+
+    double* eleAddMatrix;
+    int* eleAddMatrixDimensions = new int[3];
 
     for(int m3 = 0; m3 < v3Dimensions[0]; m3++){
         double* ccPlane  = new double[ccDimensions[0] * ccDimensions[1]];
@@ -168,34 +181,34 @@ void IP3d(double* re, int* reDimensions, double* v1, int* v1Dimensions, double* 
         ccPlaneDimensions[2] = 1;
 
         for(int zk = 0; zk < v3Dimensions[1]; zk++){
-            double *b1;// = new double[reDimensions[0] * reDimensions[1]];
-            int* b1Dimensions = new int[3];
+//            double *b1;
+//            int* b1Dimensions = new int[3];
             b1 = getPlane(re, reDimensions, zk);
             setDimensions(reDimensions[0], reDimensions[1], 1, b1Dimensions);
 
-            double* aMatrix = new double[b1Dimensions[0] * v1TransDimensions[1]];
-            int* aMatrixDimensions = new int[3];
+//            double* aMatrix = new double[b1Dimensions[0] * v1TransDimensions[1]];
+//            int* aMatrixDimensions = new int[3];
 
             multiply(v1Trans, v1TransDimensions, b1, b1Dimensions, aMatrix, aMatrixDimensions);
 
 
 
-            double* calcMatrix = new double[v2Dimensions[0] * aMatrixDimensions[1]];
-            int* calcMatrixDimensions = new int[3];
+//            double* calcMatrix = new double[v2Dimensions[0] * aMatrixDimensions[1]];
+//            int* calcMatrixDimensions = new int[3];
             multiply(aMatrix, aMatrixDimensions, v2, v2Dimensions, calcMatrix, calcMatrixDimensions);
 
 
 //            printMatrix(calcMatrix,calcMatrixDimensions);
 //            delete aMatrix;
 //
-            double* eleMultMatrix = new double[v2Dimensions[0] * aMatrixDimensions[1]];
-            int* eleMultMatrixDimensions = new int[3];
+//            double* eleMultMatrix = new double[v2Dimensions[0] * aMatrixDimensions[1]];
+//            int* eleMultMatrixDimensions = new int[3];
             matrixScalarMultiplication(calcMatrix, calcMatrixDimensions, getElement(v3,v3Dimensions,zk,m3), eleMultMatrix, eleMultMatrixDimensions);
 //
 //            printMatrix(eleMultMatrix, eleMultMatrixDimensions);
 
-            double* eleAddMatrix; // = new double[ccPlaneDimensions[0] * ccPlaneDimensions[1]];
-            int* eleAddMatrixDimensions = new int[3];
+//            double* eleAddMatrix; // = new double[ccPlaneDimensions[0] * ccPlaneDimensions[1]];
+//            int* eleAddMatrixDimensions = new int[3];
             eleAddMatrix = getPlane(cc, ccDimensions, m3);
             setDimensions(ccDimensions[0], ccDimensions[1], 1, eleAddMatrixDimensions);
 
@@ -203,16 +216,16 @@ void IP3d(double* re, int* reDimensions, double* v1, int* v1Dimensions, double* 
 //            printMatrix(eleAddMatrix);
             elementAddition(eleAddMatrix, eleAddMatrixDimensions, eleMultMatrix, eleMultMatrixDimensions, ccPlane, ccPlaneDimensions);
 
-            delete [] aMatrix;
-            delete [] aMatrixDimensions;
-            //delete [] b1;
-            delete [] b1Dimensions;
-            delete [] eleMultMatrix;
-            delete [] eleMultMatrixDimensions;
-            //delete [] eleAddMatrix;
-            delete [] eleAddMatrixDimensions;
-            delete [] calcMatrix;
-            delete [] calcMatrixDimensions;
+//            delete [] aMatrix;
+//            delete [] aMatrixDimensions;
+//            //delete [] b1;
+//            delete [] b1Dimensions;
+//            delete [] eleMultMatrix;
+//            delete [] eleMultMatrixDimensions;
+//            //delete [] eleAddMatrix;
+//            delete [] eleAddMatrixDimensions;
+//            delete [] calcMatrix;
+//            delete [] calcMatrixDimensions;
 
 
         }
@@ -221,6 +234,17 @@ void IP3d(double* re, int* reDimensions, double* v1, int* v1Dimensions, double* 
         delete [] ccPlane;
         delete [] ccPlaneDimensions;
     }
+
+    delete [] aMatrix;
+    delete [] aMatrixDimensions;
+    //delete [] b1;
+    delete [] b1Dimensions;
+    delete [] eleMultMatrix;
+    delete [] eleMultMatrixDimensions;
+    //delete [] eleAddMatrix;
+    delete [] eleAddMatrixDimensions;
+    delete [] calcMatrix;
+    delete [] calcMatrixDimensions;
 
 //    delete [] aMatrix;
 //            delete eleMultMatrix;
