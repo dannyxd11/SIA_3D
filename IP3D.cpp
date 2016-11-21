@@ -2,160 +2,139 @@
 #include <stdlib.h>
 #include <cstring>
 
-//typedef struct{
-//    int width;
-//    int height;
-//    int depth;
-//    double* elements;
-//} Matrix;
 
-class Matrix{
-public:
-    int width;
-    int height;
-    int depth;
-    double* elements;
+void setDimensions(int width, int height, int depth, int* dim){
 
-    Matrix(){   };
+    dim[0] = width;
+    dim[1] = height;
+    dim[2] = depth;
+}
 
-    Matrix(int newWidth, int newHeight, double *newElements) : width(newWidth), height(newHeight), elements(newElements), depth(1){    }
-
-    Matrix(int newWidth, int newHeight, int newDepth, double *newElements): width(newWidth), height(newHeight), depth(newDepth), elements(newElements){    }
-
-    ~Matrix(){
-        if (elements){
-            delete[] elements;
-            elements = 0;
-        }
-    }
-};
+void setDimensions(int* newDim, int* dim){
+    setDimensions(newDim[0], newDim[1], newDim[2], dim);
+}
 
 //todo Assertion
-void elementMultiplication(Matrix* matrixA, Matrix* matrixB, Matrix* results){
-    results->height = matrixA->height;
-    results->width = matrixA->width;
-    results->depth = 1;
-    results->elements = new double[matrixA->width * matrixA->height];
-    for (int i = 0; i < matrixA->width * matrixA->height; i++){
-        results->elements[i] = matrixA->elements[i] * matrixB->elements[i];
+//void elementMultiplication(Matrix* matrixA, Matrix* matrixB, Matrix* results){
+//    results->height = matrixA->height;
+//    results->width = matrixA->width;
+//    results->depth = 1;
+//    results->elements = new double[matrixA->width * matrixA->height];
+//    for (int i = 0; i < matrixA->width * matrixA->height; i++){
+//        results->elements[i] = matrixA->elements[i] * matrixB->elements[i];
+//    }
+//}
+//
+void elementAddition(double* matrixA, int* aDim, double* matrixB, int* bDim, double* results, int* rDim){
+    setDimensions(aDim[0], aDim[1], 1, rDim);
+    for (int i = 0; i < aDim[0] * aDim[1]; i++){
+        results[i] = results[i] + matrixA[i] + matrixB[i];
     }
 }
-
-void elementAddition(Matrix* matrixA, Matrix* matrixB, Matrix* results){
-    results->height = matrixA->height;
-    results->width = matrixA->width;
-    results->depth = 1;
-    results->elements = new double[matrixA->width * matrixA->height];
-    for (int i = 0; i < matrixA->width * matrixA->height; i++){
-        results->elements[i] = results->elements[i] + matrixA->elements[i] + matrixB->elements[i];
+//
+void matrixScalarMultiplication(double* matrixA, int* dim, double scalar, double* results, int* resultsDim){
+    setDimensions(dim, resultsDim);
+    //results = new double[resultsDim[0] * resultsDim[1]];
+    for (int i = 0; i < resultsDim[0] * resultsDim[1]; i++){
+        results[i] = matrixA[i] * scalar;
     }
 }
+//
 
-void matrixScalarMultiplication(Matrix* matrixA, double scalar, Matrix* results){
-    results->height = matrixA->height;
-    results->width = matrixA->width;
-    results->depth = matrixA->depth;
-    results->elements = new double[results->width * results->height];
-    for (int i = 0; i < results->width * results->height; i++){
-        results->elements[i] = matrixA->elements[i] * scalar;
-    }
+double getElement(double* matrix, int* matrixDimensions, int row, int col){
+//    std::cout << row << "\t" << matrixDimensions[0]<< "\t" << col << "\t" << row*matrixDimensions[0]+col << std::endl;
+//    std::cout << matrix[0];
+//    std::cout << "Here";
+    return matrix[row*matrixDimensions[0]+col];
 }
 
-double getElement(Matrix* matrix, int row, int col){
-    return matrix->elements[row*matrix->width+col];
+void setElement(double matrix[], int* matrixDimensions, int row, int col, double value){
+    matrix[row*matrixDimensions[0]+col] = value;
+    // std::cout <<  matrix[row*matrixDimensions[0]+col] << std::endl;
 }
 
-void setElement(Matrix* matrix, int row, int col, double value){
-    matrix->elements[row*matrix->width+col] = value;
+//
+double get3DElement(double* matrix, int* dim, int row, int col, int depth){
+    return matrix[depth*dim[0]*dim[1]+row*dim[0]+col];
 }
-
-double get3DElement(Matrix matrix, int row, int col, int depth){
-    return matrix.elements[depth*matrix.height*matrix.width+row*matrix.width+col];
-}
-
-void set3DElement(Matrix* matrix, int row, int col, int depth, double value){
-    matrix->elements[depth*matrix->height*matrix->width+row*matrix->width+col] = value;
-}
-
-void getRow(Matrix* matrix, int row, Matrix* rowMatrix){
-    rowMatrix->elements = new double[matrix->width];
-    rowMatrix->height = 1;
-    rowMatrix->width = matrix->width;
-
-    for(int i = 0; i < matrix->width; i++){
-        setElement(rowMatrix,0,i,getElement(matrix,row,i));
-    }
-}
-
-void getCol(Matrix* matrix, int col, Matrix* colMatrix){
-    //Matrix* colMatrix = new Matrix();
-    colMatrix->elements = new double[matrix->height];
-    colMatrix->width = 1;
-    colMatrix->height = matrix->height;
-    colMatrix->depth = 1;
-    for(int i = 0; i < matrix->height; i++){
-        setElement(colMatrix,i,0,getElement(matrix,i,col));
-    }
-}
-
-void getPlane(Matrix* matrix, int depth, Matrix* plane) {
+//
+//void set3DElement(Matrix* matrix, int row, int col, int depth, double value){
+//    matrix->elements[depth*matrix->height*matrix->width+row*matrix->width+col] = value;
+//}
+//
+//void getRow(Matrix* matrix, int row, Matrix* rowMatrix){
+//    rowMatrix->elements = new double[matrix->width];
+//    rowMatrix->height = 1;
+//    rowMatrix->width = matrix->width;
+//
+//    for(int i = 0; i < matrix->width; i++){
+//        setElement(rowMatrix,0,i,getElement(matrix,row,i));
+//    }
+//}
+//
+//void getCol(Matrix* matrix, int col, Matrix* colMatrix){
+//    //Matrix* colMatrix = new Matrix();
+//    colMatrix->elements = new double[matrix->height];
+//    colMatrix->width = 1;
+//    colMatrix->height = matrix->height;
+//    colMatrix->depth = 1;
+//    for(int i = 0; i < matrix->height; i++){
+//        setElement(colMatrix,i,0,getElement(matrix,i,col));
+//    }
+//}
+//
+double* getPlane(double* matrix, int* matrixDimensions, int depth) {
 //    plane->elements = new double[plane->width * plane->height];
 //    std::memcpy(plane->elements, &matrix->elements[matrix->width * matrix->height * depth], sizeof(double) * plane->height * plane->width);
-    plane->elements = &matrix->elements[matrix->width * matrix->height * depth];
-    plane->width = matrix->width;
-    plane->height = matrix->height;
-    plane->depth = 1;
+    return matrix + (matrixDimensions[0] * matrixDimensions[1] * depth);
 }
-
-void setPlane(Matrix* plane, Matrix* matrix3d, int dimension){
-    std::memcpy(&matrix3d->elements[matrix3d->height * matrix3d->width * dimension], plane->elements,
-                sizeof(double) * plane->height * plane->width);
+//
+void setPlane(double* plane, int* planeDim, double* matrix3d, int* matrixDim, int dimension){
+    std::memcpy(&matrix3d[matrixDim[0] * matrixDim[1] * dimension], plane, sizeof(double) * planeDim[0] * planeDim[1]);
 }
+//
 
-void multiply(Matrix* a, Matrix* b, Matrix* result){
-    result->height = a->height;
-    result->width = b->width;
-    result->depth = 1;
-    result->elements = new double[result->width * result->height];
-    for(int i = 0; i < a->height; i++){
-        for(int j = 0; j < b->width; j++){
+void multiply(double* a, int* aDim, double* b, int* bDim, double* result, int* rDim){
+    setDimensions(bDim[0], aDim[1], 1, rDim);
+    for(int i = 0; i < rDim[1]; i++){
+        for(int j = 0; j < rDim[0]; j++){
             double el=0;
-            for(int n = 0; n < a->width; n++){
-                el += getElement(a,i,n) * getElement(b,n,j);
+            for(int n = 0; n < aDim[0]; n++){
+                el += getElement(a,aDim,i,n) * getElement(b,bDim,n,j);
             }
-            setElement(result,i,j,el);
+            setElement(result,rDim,i,j,el);
         }
     }
 }
 
-void transpose(Matrix* matrix, Matrix* newMx){
-    newMx->elements = new double[matrix->width * matrix->height];
-    newMx->width = matrix->height;
-    newMx->height = matrix->width;
-    newMx->depth = 1;
-    for(int i = 0; i < matrix->width; i++) {
-        for(int j = 0; j < matrix->height; j++){
-            setElement(newMx, i, j, getElement(matrix, j, i));
+void transpose(double* matrix, int* matrixDimensions, double* newMx, int* newMxDimensions){
+    //newMx = new double[matrixDimensions[0] * matrixDimensions[1]];
+    newMxDimensions[0] = matrixDimensions[1];
+    newMxDimensions[1] = matrixDimensions[0];
+    newMxDimensions[2] = 0;
+    for(int i = 0; i < matrixDimensions[0]; i++) {
+        for(int j = 0; j < matrixDimensions[1]; j++){
+            setElement(newMx, newMxDimensions, i, j, getElement(matrix, matrixDimensions, j, i));
         }}
 }
 
-void printMatrix(Matrix* matrix){
-    std::cout << "\n\nHeight: " << matrix->height << "\tWidth: " << matrix->width << "\t" << "Depth: " << matrix->depth << "\n" ;
-    if(matrix->depth > 1){
-        for (int z = 0; z < matrix->depth; z++) {
-            std::cout << "\nDepth: " << z << std::endl;
-            for (int i = 0; i < matrix->height; i++) {
-                for (int j = 0; j < matrix->width; j++) {
-                    std::cout << getElement(matrix, i, j);
+void printMatrix(double* matrix, int* dim){
+    std::cout << "\n\nHeight: " << dim[1] << "\tWidth: " << dim[0] << "\n";
+    if (dim[2] > 1){
+        for(int z = 0; z < dim[2]; z++) {
+            std::cout << "Dimension: " << z + 1 << "\n";
+            for (int i = 0; i < dim[1]; i++) {
+                for (int j = 0; j < dim[0]; j++) {
+                    std::cout << get3DElement(matrix, dim, i, j, z);
                     std::cout << ", ";
                 }
                 std::cout << "\n";
             }
         }
     }else {
-        for (int i = 0; i < matrix->height; i++) {
-            for (int j = 0; j < matrix->width; j++) {
-                std::cout << getElement(matrix, i, j);
+        for (int i = 0; i < dim[1]; i++) {
+            for (int j = 0; j < dim[0]; j++) {
+                std::cout << getElement(matrix, dim, i, j);
                 std::cout << ", ";
             }
             std::cout << "\n";
@@ -163,58 +142,93 @@ void printMatrix(Matrix* matrix){
     }
 }
 
-void IP3d(Matrix* re, Matrix* v1, Matrix* v2, Matrix* v3, Matrix* cc){
-    int Nx = v1->width;
-    int Lx = v1->height;
-    int Ny = v2->width;
-    int Ly = v2->height;
-    int Nz = v3->width;
-    int Lz = v3->height;
-
-    cc->height = Nx;
-    cc->width = Ny;
-    cc->depth = Nz;
-    cc->elements = new double[v1->width * v2->width * v3->width];
-    for(int i = 0; i < Nx * Ny * Nz; i++){
-        cc->elements[i] = 0;
+void IP3d(double* re, int* reDimensions, double* v1, int* v1Dimensions, double* v2, int* v2Dimensions, double* v3, int* v3Dimensions, double* cc, int *ccDimensions){
+    for(int i = 0; i < ccDimensions[0] * ccDimensions[1] * ccDimensions[2]; i++){
+        cc[i] = 0;
     }
-    std::cout << Nx << "\t" << Lx << "\t"  << Ny << "\t" << Ly << "\t" << Nz << "\t" << Lz << std::endl;
-    for(int m3 = 0; m3 < Nz; m3++){
-        Matrix* ccPlane = new Matrix();
-        ccPlane->height = cc->height;
-        ccPlane->width = cc->width;
-        ccPlane->depth = 1;
-        for(int zk = 0; zk < Lz; zk++){
-            Matrix* calcMatrix = new Matrix();
-            Matrix* aMatrix = new Matrix();
-            Matrix* v1Trans = new Matrix();
-            multiply(v1Trans, b1, aMatrix);
-            multiply(aMatrix, v2,calcMatrix
-            Matrix* b1 = new Matrix();
 
-            transpose(v1, v1Trans);
-            getPlane(re, zk, b1););
-            delete aMatrix;
 
-            Matrix* eleMultMatrix = new Matrix();
-            matrixScalarMultiplication(calcMatrix, getElement(v3,zk,m3), eleMultMatrix);
 
-            Matrix* eleAddMatrix = new Matrix();
-            getPlane(cc, m3, eleAddMatrix);
-            printMatrix(eleAddMatrix);
-            elementAddition(eleAddMatrix, eleMultMatrix, ccPlane);
 
-            delete eleMultMatrix;
-            delete eleAddMatrix;
-            delete v1Trans;
-            delete b1;
-            delete calcMatrix;
+    double *v1Trans = new double[v1Dimensions[0] * v1Dimensions[1]];
+    int* v1TransDimensions = new int[3];
+    transpose(v1, v1Dimensions, v1Trans, v1TransDimensions);
+
+    // double *b1;// = new double[reDimensions[0] * reDimensions[1]];
+    //int* b1Dimensions = new int[3];
+
+    for(int m3 = 0; m3 < v3Dimensions[0]; m3++){
+        double* ccPlane  = new double[ccDimensions[0] * ccDimensions[1]];
+        for (int i = 0; i < ccDimensions[0] * ccDimensions[1]; i++){
+            ccPlane[i] = 0;
+        }
+        int* ccPlaneDimensions = new int[3];
+        ccPlaneDimensions[0] = ccDimensions[0];
+        ccPlaneDimensions[1] = ccDimensions[1];
+        ccPlaneDimensions[2] = 1;
+
+        for(int zk = 0; zk < v3Dimensions[1]; zk++){
+            double *b1;// = new double[reDimensions[0] * reDimensions[1]];
+            int* b1Dimensions = new int[3];
+            b1 = getPlane(re, reDimensions, zk);
+            setDimensions(reDimensions[0], reDimensions[1], 1, b1Dimensions);
+
+            double* aMatrix = new double[b1Dimensions[0] * v1TransDimensions[1]];
+            int* aMatrixDimensions = new int[3];
+
+            multiply(v1Trans, v1TransDimensions, b1, b1Dimensions, aMatrix, aMatrixDimensions);
+
+
+
+            double* calcMatrix = new double[v2Dimensions[0] * aMatrixDimensions[1]];
+            int* calcMatrixDimensions = new int[3];
+            multiply(aMatrix, aMatrixDimensions, v2, v2Dimensions, calcMatrix, calcMatrixDimensions);
+
+
+//            printMatrix(calcMatrix,calcMatrixDimensions);
+//            delete aMatrix;
+//
+            double* eleMultMatrix = new double[v2Dimensions[0] * aMatrixDimensions[1]];
+            int* eleMultMatrixDimensions = new int[3];
+            matrixScalarMultiplication(calcMatrix, calcMatrixDimensions, getElement(v3,v3Dimensions,zk,m3), eleMultMatrix, eleMultMatrixDimensions);
+//
+//            printMatrix(eleMultMatrix, eleMultMatrixDimensions);
+
+            double* eleAddMatrix; // = new double[ccPlaneDimensions[0] * ccPlaneDimensions[1]];
+            int* eleAddMatrixDimensions = new int[3];
+            eleAddMatrix = getPlane(cc, ccDimensions, m3);
+            setDimensions(ccDimensions[0], ccDimensions[1], 1, eleAddMatrixDimensions);
+
+
+//            printMatrix(eleAddMatrix);
+            elementAddition(eleAddMatrix, eleAddMatrixDimensions, eleMultMatrix, eleMultMatrixDimensions, ccPlane, ccPlaneDimensions);
+
+            delete [] aMatrix;
+            delete [] aMatrixDimensions;
+            //delete [] b1;
+            delete [] b1Dimensions;
+            delete [] eleMultMatrix;
+            delete [] eleMultMatrixDimensions;
+            //delete [] eleAddMatrix;
+            delete [] eleAddMatrixDimensions;
+            delete [] calcMatrix;
+            delete [] calcMatrixDimensions;
+
 
         }
-
-        setPlane(ccPlane, cc, m3);
-      //  delete ccPlane;
+        //  printMatrix(ccPlane, ccPlaneDimensions);
+        setPlane(ccPlane, ccPlaneDimensions, cc, ccDimensions, m3);
+        delete [] ccPlane;
+        delete [] ccPlaneDimensions;
     }
+
+//    delete [] aMatrix;
+//            delete eleMultMatrix;
+//            delete eleAddMatrix;
+    delete [] v1Trans;
+    delete [] v1TransDimensions;
+//    delete [] b1;
+//    delete [] calcMatrix;
 }
 
 int main() {
@@ -245,33 +259,42 @@ int main() {
 
     double reElements[] = {8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6};
 
-//    dx.elements = &dxElements[0];
-//    dy.elements = &dyElements[0];
-//    dz.elements = &dzElements[0];
-//    re.elements = &reElements[0];
+    int dxDimensions[] = {40, 8, 1};
+    int dyDimensions[] = {40, 8, 1};
+    int dzDimensions[] = {40, 3, 1};
+    int reDimensions[] = {8, 8, 3};
 
-    Matrix* dx = new Matrix(40, 8, &vxElements[0]);
-    Matrix* dy = new Matrix(40, 8, &vyElements[0]);
-    Matrix* dz = new Matrix(40, 3, &vzElements[0]);
-    Matrix* re = new Matrix(8, 8, 3, &reElements[0]);
+//    Matrix* dx = new Matrix(40, 8, &vxElements[0]);
+//    Matrix* dy = new Matrix(40, 8, &vyElements[0]);
+//    Matrix* dz = new Matrix(40, 3, &vzElements[0]);
+//    Matrix* re = new Matrix(8, 8, 3, &reElements[0]);
 
-    Matrix* cc = new Matrix();
-    IP3d(re,dx,dy,dz,cc);
-    printMatrix(cc);
+//    Matrix* cc = new Matrix();
 
+    double* ccElements = new double[dxDimensions[0] * dyDimensions[0] * dzDimensions[0]];
+    int ccDimensions[] = {dxDimensions[0], dyDimensions[0], dzDimensions[0]};
+
+    IP3d(reElements,reDimensions,vxElements,dxDimensions,vyElements,dyDimensions,vzElements,dzDimensions,ccElements,ccDimensions);
+    //printMatrix(ccElements, ccDimensions);
+
+    double* firstPlane;
+    int dim[] = {40,40,1};
+    firstPlane = getPlane(ccElements,ccDimensions, 2);
+    printMatrix(firstPlane,dim);
+//
 //    Matrix* val = new Matrix();
-//    //val->elements = 0;
+//    val->elements = 0;
 //    matrixScalarMultiplication(dy, 2, val);
 //    printMatrix(val);
 
 
-   // delete val;
+//    delete val;
 //    delete re;
 //
 //    delete dy;
-//    //delete dx;
+//    delete dx;
 //    delete dz;
-    delete cc;
+    delete [] ccElements;
     return 0;
 }
 
