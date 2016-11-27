@@ -18,18 +18,23 @@ void IP3d(double* re, int* reDimensions, double* v1, int* v1Dimensions, double* 
 
     double *b1;
     int* b1Dimensions = new int[3];
+    setDimensions(reDimensions[0], reDimensions[1], 1, b1Dimensions);
 
     double* aMatrix = new double[b1Dimensions[0] * v1TransDimensions[1]];
     int* aMatrixDimensions = new int[3];
+    setDimensions(b1Dimensions[0], v1TransDimensions[1], 1, aMatrixDimensions);
 
     double* calcMatrix = new double[v2Dimensions[0] * aMatrixDimensions[1]];
     int* calcMatrixDimensions = new int[3];
+    setDimensions(v2Dimensions[0], aMatrixDimensions[1], 1, calcMatrixDimensions);
 
     double* eleMultMatrix = new double[v2Dimensions[0] * aMatrixDimensions[1]];
     int* eleMultMatrixDimensions = new int[3];
+    setDimensions(calcMatrixDimensions, eleMultMatrixDimensions);
 
     double* eleAddMatrix;
     int* eleAddMatrixDimensions = new int[3];
+    setDimensions(ccDimensions[0], ccDimensions[1], 1, eleAddMatrixDimensions);
 
     for(int m3 = 0; m3 < v3Dimensions[0]; m3++){
         double* ccPlane  = new double[ccDimensions[0] * ccDimensions[1]];
@@ -43,7 +48,7 @@ void IP3d(double* re, int* reDimensions, double* v1, int* v1Dimensions, double* 
 
         for(int zk = 0; zk < v3Dimensions[1]; zk++){
             b1 = getPlane(re, reDimensions, zk);
-            setDimensions(reDimensions[0], reDimensions[1], 1, b1Dimensions);
+
             multiply(v1Trans, v1TransDimensions, b1, b1Dimensions, aMatrix, aMatrixDimensions);
             //mlMultiply(v1Trans, v1TransDimensions, b1, b1Dimensions, aMatrix, aMatrixDimensions);
             multiply(aMatrix, aMatrixDimensions, v2, v2Dimensions, calcMatrix, calcMatrixDimensions);
@@ -104,7 +109,7 @@ int main() {
 
     double* ccElements = new double[dxDimensions[0] * dyDimensions[0] * dzDimensions[0]];
     int ccDimensions[] = {dxDimensions[0], dyDimensions[0], dzDimensions[0]};
-    for (int i = 0; i < 15000; i++) {
+    for (int i = 0; i < 1; i++) {
         IP3d(reElements, reDimensions, vxElements, dxDimensions, vyElements, dyDimensions, vzElements, dzDimensions,
              ccElements, ccDimensions);
     }
