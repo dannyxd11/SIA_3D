@@ -3,96 +3,92 @@
 using namespace std;
 
 
-double getElement(double* elements, int majorWidth, int x, int y){
+double getElementUsingMajor(double* elements, int majorWidth, int x, int y){
     return elements[majorWidth * x + y];
 }
 
-void colMajorToRowMajor(double* elements, int width, int height, double *newElements){
-    int newIndex = 0;
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            newElements[newIndex] = getElement(elements, height, j, i);
-            //mexPrintf("%d", (height * i + width * j));
-            newIndex++;
+void colMajorToRowMajor(double* elements, int* dim, double *newElements){
+    if(dim[2] > 1){
+        for (int z = 0; z < dim[2]; z++){
+            int* tempDim = new int[3];
+            setDimensions(dim[0], dim[1], 1, tempDim);
+            double* temp = new double[tempDim[0] * tempDim[1]];
+            colMajorToRowMajor(&elements[z * tempDim[0] * tempDim[1]], tempDim, temp);
+            std::memcpy(&newElements[z * tempDim[0] * tempDim[1]], temp, tempDim[0] * tempDim[1] * sizeof(double));
+            delete [] temp;
+            delete [] tempDim;
+        }
+    }else {
+        int newIndex = 0;
+        for (int i = 0; i < dim[1]; i++) {
+            for (int j = 0; j < dim[0]; j++) {
+                newElements[newIndex] = getElementUsingMajor(elements, dim[1], j, i);
+                newIndex++;
+            }
         }
     }
-    free(elements);
-    //return newElements;
-}
-
-void colMajorToRowMajor3D(double* elements, int width, int height, int depth, double *newElements){
-
-    for (int z = 0; z < depth; z++){
-        double* temp = (double*)malloc(width * height * sizeof(double));
-        colMajorToRowMajor(&elements[z * width * height], width, height, temp);
-        std::memcpy(&newElements[z * width * height], temp, width * height * sizeof(double));
-        free(temp);
-      // newElements[z * width * height] = colMajorToRowMajor(&elements[z * width * height], width, height);
-    }
-    //return newElements;
 }
 
 void mexFunction(int nlhs, mxArray *plhs[],
                  int nrhs, const mxArray *prhs[]) {
 
-    mexPrintf("No Errors: 1");
-    int height = mxGetDimensions(prhs[0])[0];
-    int width = mxGetDimensions(prhs[0])[1];
-    int depth = mxGetDimensions(prhs[0])[2];
-    double* reElements = (double*)malloc(width * height * depth * sizeof(double));
-    mexPrintf("No Errors: 2");
-    colMajorToRowMajor3D(mxGetPr(prhs[0]), width, height, depth, reElements);
-    Matrix* re = new Matrix(width, height, depth, reElements);
-    mexPrintf("No Errors: 3");
+
+    int* reDim = new int[3];
+    setDimensions(mxGetDimensions(prhs[0])[1], mxGetDimensions(prhs[0])[0], mxGetDimensions(prhs[0])[2], reDim);
+    double* reElements = new double[reDim[0] * reDim[1] * reDim[2]];
+    colMajorToRowMajor(mxGetPr(prhs[0]), reDim, reElements);
 
     //
 
-    height = mxGetDimensions(prhs[1])[0];
-    width = mxGetDimensions(prhs[1])[1];
-    mexPrintf("No Errors: 4");
-    double* dxElements = (double*)malloc(width * height * sizeof(double));
-    mexPrintf("No Errors: 5");
-    colMajorToRowMajor(mxGetPr(prhs[1]), width, height, dxElements);
-    Matrix* dx = new Matrix(width, height, dxElements);
-    mexPrintf("No Errors: 6");
+    int* dxDim = new int[3];
+    setDimensions(mxGetDimensions(prhs[1])[1], mxGetDimensions(prhs[1])[0], 1, dxDim);
+    double* dxElements = new double[dxDim[0] * dxDim[1] * dxDim[2]];
+    colMajorToRowMajor(mxGetPr(prhs[1]), dxDim, dxElements);
 
 
     //
 
-    height = mxGetDimensions(prhs[2])[0];
-    width = mxGetDimensions(prhs[2])[1];
-    double* dyElements = (double*)malloc(width * height * sizeof(double));
-    colMajorToRowMajor(mxGetPr(prhs[2]), width, height, dyElements);
-    Matrix* dy = new Matrix(width, height, dyElements);
+    int* dyDim = new int[3];
+    setDimensions(mxGetDimensions(prhs[2])[1], mxGetDimensions(prhs[2])[0], 1, dyDim);
+    double* dyElements = new double[dyDim[0] * dyDim[1] * dyDim[2]];
+    colMajorToRowMajor(mxGetPr(prhs[2]), dyDim, dyElements);
+
+    //
+
+
+    int* dzDim = new int[3];
+    setDimensions(mxGetDimensions(prhs[3])[1], mxGetDimensions(prhs[3])[0], 1, dzDim);
+    double* dzElements = new double[dzDim[0] * dzDim[1] * dzDim[2]];
+    colMajorToRowMajor(mxGetPr(prhs[3]), dzDim, dzElements);
 
 
     //
 
-    height = mxGetDimensions(prhs[3])[0];
-    width = mxGetDimensions(prhs[3])[1];
-    double* dzElements = (double*)malloc(width * height * sizeof(double));
-    colMajorToRowMajor(mxGetPr(prhs[3]), width, height, dzElements);
-    Matrix* dz = new Matrix(width, height, dzElements);
-
-
-    //
-    mexPrintf("No Errors: 7");
-    Matrix* cc = new Matrix();
-    mexPrintf("No Errors: 8");
-    IPSP3d(re, dx, dy, dz, cc);
-    mexPrintf("No Errors: 9");
+    int* ccDim = new int[3];
+    setDimensions(dxDim[0], 1, 1, ccDim);
 
     nlhs = 1;
-    plhs[0] = mxCreateDoubleMatrix(cc->height, cc->width, mxREAL);
-    memcpy(mxGetPr(plhs[0]), cc->elements, cc->height * cc->width * sizeof(double));
-    delete re;
-    delete dx;
-    delete dy;
-    delete dz;
-    delete cc;
+    int ndim = 3, dims[3] = {ccDim[1], ccDim[0], ccDim[2]};
+    plhs[0] = mxCreateNumericArray(ndim,
+                                   dims,
+                                   mxDOUBLE_CLASS,
+                                   mxREAL);
+    double* cc = mxGetPr(plhs[0]);
 
-    free(reElements);
-    free(dxElements);
-    free(dyElements);
-    free(dzElements);
+    IPSP3d(reElements, reDim,
+           dxElements, dxDim,
+           dyElements, dyDim,
+           dzElements, dzDim,
+           cc, ccDim);
+
+    delete [] reElements;
+    delete [] dxElements;
+    delete [] dyElements;
+    delete [] dzElements;
+
+    delete [] ccDim;
+    delete [] reDim;
+    delete [] dxDim;
+    delete [] dyDim;
+    delete [] dzDim;
 }
