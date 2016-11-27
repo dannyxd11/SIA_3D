@@ -52,7 +52,8 @@ for it=1:Max;
 %=============================================
        [c1,n1]=max(abs(cc));
      if c1 < tol2 
-     fprintf('%s stopped, max(|<f,D>|)<= tol2=%g.\n',name,tol2); break;
+     %fprintf('%s stopped, max(|<f,D>|)<= tol2=%g.\n',name,tol2); 
+     break;
      end
      for zk=1:L3
      h_new(:,:,zk)=V1(:,n1)*cc(n1)*V2(:,n1)'*V3(zk,n1);

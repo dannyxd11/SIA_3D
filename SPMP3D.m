@@ -108,7 +108,8 @@ for it=1:Maxit2;
        [max_c,maxind]=max(abs(cc(:))); %chose max index of long vector
        [q(1),q(2),q(3)]=ind2sub(size(cc),maxind);%reshape to long vector to get the 3D index    
 %
-         if max_c < tol2 fprintf('%s stopped, max(|<f,D>|)<= tol2=%g.\n',name,tol2); return; end 
+         if max_c < tol2 %fprintf('%s stopped, max(|<f,D>|)<= tol2=%g.\n',name,tol2); 
+             return; end 
     end 
 %This is to collect selected atoms with the same index
       vq=[q(1),q(2),q(3)];
