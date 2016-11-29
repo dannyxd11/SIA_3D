@@ -59,11 +59,12 @@ void IPSP3d(double* re, int* reDim, double* v1, int* v1Dim, double* v2, int* v2D
 
     delete [] v1Trans;
     delete [] v1TransDim;
+    delete [] row;
     delete [] rowDim;
     delete [] planeDim;
     delete [] aMatrix;
     delete [] aMatrixDim;
-    delete [] b2;
+    //delete [] b2;
     delete [] b2Dim;
     delete [] calcMatrix;
     delete [] calcDim;
