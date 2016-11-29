@@ -3,57 +3,57 @@
 #include <cstring>
 #include "commonOps.cpp"
 
-double* getRow(double* matrix, int* matrixDim, int row){
-    return &matrix[matrixDim[0] * row];
-}
-
-
-void getCol(double* matrix, int* matrixDim, int col, double* colMatrix, int* colDim){
-    setDimensions(1, matrixDim[1], 1, colDim);
+void getRow(double* matrix, int* matrixDim, int row, double* rowMatrix, int* rowDim){
+    setDimensions(1, matrixDim[1], 1, rowDim);
     for(int i = 0; i < matrixDim[1]; i++){
-        setElement(colMatrix, colDim, i, 0, getElement(matrix, matrixDim, i, col));
+        setElement(rowMatrix, rowDim, i, 0, getElement(matrix, matrixDim, i, row));
     }
 }
 
-void IPSP3d(double* re, int* reDim, double* v1, int* v1Dim, double* v2, int* v2Dim, double* v3, int* v3Dim, double* cc, int* ccDim){
-    int n1 = v1Dim[0];
-    int l3 = v3Dim[1];
+double* getCol(double* matrix, int* matrixDim, int col){
+    return &matrix[matrixDim[0] * col];
+}
 
+void IPSP3d(double* re, int* reDim, double* v1, int* v1Dim, double* v2, int* v2Dim, double* v3, int* v3Dim, double* cc, int* ccDim){
+    int n1 = v1Dim[1];
+    int l3 = v3Dim[0];
+
+    double* v1Trans = new double[v1Dim[0] * v1Dim[1]];
     int* v1TransDim = new int[3];
-    setDimensions(v1Dim[1], v1Dim[0], 1, v1TransDim);
-    double* v1Trans = new double[v1TransDim[0] * v1TransDim[1]];
+    transpose(v1, v1Dim, v1Trans, v1TransDim);
 
     int* rowDim = new int[3];
-    setDimensions(v1TransDim[0], 1, 1, rowDim);
-    double* row;
+    setDimensions(1, v1TransDim[1], 1, rowDim);
+    double* row = new double[rowDim[0] * rowDim[1]];
 
     int* planeDim = new int[3];
     setDimensions(reDim[0], reDim[1], 1, planeDim);
     double* plane;
 
     int* aMatrixDim = new int[3];
-    setDimensions(planeDim[0], rowDim[1], 1, aMatrixDim);
+    setDimensions(rowDim[0], planeDim[1], 1, aMatrixDim);
     double* aMatrix = new double[aMatrixDim[0] * aMatrixDim[1]];
 
     int* b2Dim = new int[3];
-    setDimensions(1, v2Dim[1], 1, b2Dim);
-    double* b2 = new double[b2Dim[0] * b2Dim[1]];
+    setDimensions(v2Dim[0], 1, 1, b2Dim);
+    double* b2; // = new double[b2Dim[0] * b2Dim[1]];
 
     int* calcDim = new int[3];
-    setDimensions(aMatrixDim[1], b2Dim[0], 0, calcDim);
+    setDimensions(aMatrixDim[0], b2Dim[1], 1, calcDim);
     double* calcMatrix = new double[calcDim[0] * calcDim[1]];
 
 
     for(int i = 0; i < n1; i++){
         cc[i] = 0;
         for(int j = 0; j < l3; j++){
-            transpose(v1, v1Dim, v1Trans, v1TransDim);
-            row = getRow(v1Trans,v1TransDim,i);
+            getRow(v1Trans,v1TransDim,i, row, rowDim);
+            //row = getRow(v1Trans,v1TransDim,i);
             plane = getPlane(re, reDim, j);
             multiply(row, rowDim, plane, planeDim, aMatrix, aMatrixDim);
-            getCol(v2, v2Dim, i,b2, b2Dim);
+            //getCol(v2, v2Dim, i,b2, b2Dim);
+            b2 = getCol(v2, v2Dim, i);
             multiply(aMatrix, aMatrixDim, b2, b2Dim, calcMatrix, calcDim);
-            cc[i] += calcMatrix[0] * getElement(v3, v3Dim, j, i);
+            cc[i] += calcMatrix[0] * getElement(v3, v3Dim, i, j);
         }
     }
 
@@ -110,10 +110,9 @@ int main() {
     setDimensions(dxDim[0], 1, 1, ccDim);
 
     double* cc = new double[ccDim[0]];
-    for (int i = 0; i < 15000; i++){
     IPSP3d(reElements, reDim, dxElements, dxDim, dyElements, dyDim, dzElements, dzDim, cc, ccDim);
-    }
-    printMatrix(cc,ccDim);
+
+
     delete [] reDim;
     delete [] dxDim;
     delete [] dyDim;
