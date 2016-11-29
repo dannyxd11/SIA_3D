@@ -1,6 +1,9 @@
-void setDimensions(int width, int height, int depth, int* dim){
-    dim[0] = width;
-    dim[1] = height;
+//#include "mex.h
+#include "MyBLAS.h"
+
+void setDimensions(int height, int width, int depth, int* dim){
+    dim[0] = height;
+    dim[1] = width;
     dim[2] = depth;
 }
 
@@ -15,24 +18,22 @@ void elementAddition(double* matrixA, int* aDim, double* matrixB, int* bDim, dou
     }
 }
 
-void matrixScalarMultiplication(double* matrixA, int* dim, double scalar, double* results, int* resultsDim){
-
-    setDimensions(dim, resultsDim);
-    for (int i = 0; i < resultsDim[0] * resultsDim[1]; i++){
-        results[i] = matrixA[i] * scalar;
+void matrixScalarMultiplication(double* matrixA, int* dim, double scalar){
+    for (int i = 0; i < dim[0] * dim[1]; i++){
+        matrixA[i] = matrixA[i] * scalar;
     }
 }
 
-double getElement(double* matrix, int* matrixDimensions, int row, int col){
-    return matrix[row*matrixDimensions[0]+col];
+double getElement(double* matrix, int* matrixDimensions,  int col, int row){
+    return matrix[col * matrixDimensions[0] + row];
 }
 
-void setElement(double matrix[], int* matrixDimensions, int row, int col, double value){
-    matrix[row*matrixDimensions[0]+col] = value;
+void setElement(double matrix[], int* matrixDimensions, int col, int row, double value){
+    matrix[col * matrixDimensions[0] + row] = value;
 }
 
 double get3DElement(double* matrix, int* dim, int row, int col, int depth){
-    return matrix[depth*dim[0]*dim[1]+row*dim[0]+col];
+    return matrix[depth * dim[0] * dim[1] + col * dim[0] + row];
 }
 
 double* getPlane(double* matrix, int* matrixDimensions, int depth) {
@@ -44,26 +45,30 @@ void setPlane(double* plane, int* planeDim, double* matrix3d, int* matrixDim, in
 }
 
 void multiply(double* a, int* aDim, double* b, int* bDim, double* result, int* rDim){
-    setDimensions(bDim[0], aDim[1], 1, rDim);
-    for(int i = 0; i < rDim[1]; i++){
-        for(int j = 0; j < rDim[0]; j++){
+    setDimensions(aDim[0], bDim[1], 1, rDim);
+    for(int j = 0; j < rDim[1]; j++){
+        for(int i = 0; i < rDim[0]; i++){
             double el=0;
-            for(int n = 0; n < aDim[0]; n++){
-                el += getElement(a,aDim,i,n) * getElement(b,bDim,n,j);
+            for(int n = 0; n < aDim[1]; n++){
+                el += getElement(a,aDim,n,i) * getElement(b,bDim,j,n);
             }
-            setElement(result,rDim,i,j,el);
+            setElement(result,rDim,j,i,el);
         }
     }
 }
 
+void blasMultiply(double* a, int* aDim, double* b, int* bDim, double* result, int* rDim){
+    MatrixMultiplyBLAS(a, b, result, aDim[0], aDim[1], rDim[1], 'N', 'N');
+}
+
 void printMatrix(double* matrix, int* dim){
-    std::cout << "\n\nHeight: " << dim[1] << "\tWidth: " << dim[0] << "\n";
+    std::cout << "\n\nHeight: " << dim[0] << "\tWidth: " << dim[1] << "\n";
     if (dim[2] > 1){
         for(int z = 0; z < dim[2]; z++) {
             std::cout << "Dimension: " << z + 1 << "\n";
             for (int i = 0; i < dim[1]; i++) {
                 for (int j = 0; j < dim[0]; j++) {
-                    std::cout << get3DElement(matrix, dim, i, j, z);
+                    std::cout << get3DElement(matrix, dim, j, i, z);
                     std::cout << ", ";
                 }
                 std::cout << "\n";
@@ -72,7 +77,7 @@ void printMatrix(double* matrix, int* dim){
     }else {
         for (int i = 0; i < dim[1]; i++) {
             for (int j = 0; j < dim[0]; j++) {
-                std::cout << getElement(matrix, dim, i, j);
+                std::cout << getElement(matrix, dim, j, i);
                 std::cout << ", ";
             }
             std::cout << "\n";
