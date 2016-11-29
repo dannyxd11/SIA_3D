@@ -1,7 +1,8 @@
 %test rgb images to use the same indexes apprximated by OMPMl (1D)
 
 %load the image 
-ImagePath='027_opo0613a_256.jpg' 
+% ImagePath='4k.jpg' 
+ImagePath = '027_opo0613a_256.jpg';
 %
 %%%%%%%%%%%%%%%%prnr for tol%%%%
 pss=40.5;
@@ -91,9 +92,11 @@ darkb=0;
 Ml=3;
 pp(1:Ml)=1/Ml;
 c1=fix(clock)
-tic;
+timeTakenPerBlock = 0;
 for i = 1:nYBlocks
+    tic;    
 for j = 1:nXBlocks
+%fprintf('Block Number: %d/%d, %d/%d\n', i,nYBlocks, j,nXBlocks);
 k=k+1;
 B1=cmI1{i,j};
 B2=cmI2{i,j};
@@ -120,6 +123,8 @@ fs(:,:,3)=B3;
   darkb=darkb+1;
   end
 end
+timeTakenPerBlock(i) = toc;
+fprintf('Block Number: %d/%d - %f\n', i,nYBlocks,timeTakenPerBlock(i));
  end 
 c2=fix(clock)
 mImage1=cell2mat(cmIa1);
@@ -137,5 +142,6 @@ mIAp(:,:,2)=mImage2;
 mIAp(:,:,3)=mImage3;
 fprintf('number of dark blocks.\n')
 darkb
-toc
+plot(timeTakenPerBlock);
+timeTaken = sum(timeTakenPerBlock)
 return
