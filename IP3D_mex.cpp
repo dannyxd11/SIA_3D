@@ -28,8 +28,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
                  int nrhs, const mxArray *prhs[]) {
 
 
-    int* reDim = new int[3];
-    mexPrintf("RE: %d,%d,%d\n", mxGetDimensions(prhs[0])[0], mxGetDimensions(prhs[0])[1], mxGetDimensions(prhs[0])[2]);
+    int* reDim = new int[3];  
     setDimensions(mxGetDimensions(prhs[0])[0], mxGetDimensions(prhs[0])[1], mxGetDimensions(prhs[0])[2], reDim);
     double* reElements = mxGetPr(prhs[0]);
 
