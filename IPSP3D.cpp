@@ -49,10 +49,10 @@ void IPSP3d(double* re, int* reDim, double* v1, int* v1Dim, double* v2, int* v2D
             getRow(v1Trans,v1TransDim,i, row, rowDim);
             //row = getRow(v1Trans,v1TransDim,i);
             plane = getPlane(re, reDim, j);
-            multiply(row, rowDim, plane, planeDim, aMatrix, aMatrixDim);
+            blasMultiply(row, rowDim, plane, planeDim, aMatrix, aMatrixDim);
             //getCol(v2, v2Dim, i,b2, b2Dim);
             b2 = getCol(v2, v2Dim, i);
-            multiply(aMatrix, aMatrixDim, b2, b2Dim, calcMatrix, calcDim);
+            blasMultiply(aMatrix, aMatrixDim, b2, b2Dim, calcMatrix, calcDim);
             cc[i] += calcMatrix[0] * getElement(v3, v3Dim, i, j);
         }
     }
