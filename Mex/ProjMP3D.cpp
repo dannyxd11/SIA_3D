@@ -5,7 +5,7 @@
 #include "IPSP3D.cpp"	
 #include "hnew3D.cpp"
 #include "mex.h"
-//#include <cmath>
+
 
 void ProjMP3d(double* h, double* re, int* reDim, double* v1, int* v1Dim, double* v2, int* v2Dim, double* v3, int* v3Dim, double* c, int* cDim, double toln, double max){
 
