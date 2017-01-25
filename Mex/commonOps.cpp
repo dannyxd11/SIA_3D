@@ -2,6 +2,8 @@
 #define COMMON_OPS
 
 #include "MyBLAS.h"
+#include <stdlib.h>
+#include <iostream>
 
 void setDimensions(int height, int width, int depth, int* dim){
     dim[0] = height;
@@ -106,4 +108,8 @@ double* getCol(double* matrix, int* matrixDim, int col){
     return &matrix[matrixDim[0] * col];
 }
 
+
 #endif
+
+
+
