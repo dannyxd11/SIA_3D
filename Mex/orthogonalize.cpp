@@ -14,66 +14,6 @@
  *
  */
 
-void orthogonalize(double* Q, int* QDim, double* newAtom, int* newAtomDim){
-
-    // Set K as width + 1 (Size is increasing)
-    int k = QDim[1] + 1;
-    int* origDim = new int[3];
-    setDimensions(QDim, origDim);
-    QDim[1] += 1;
-
-
-    double multResult1 = 0;
-    int* multResult1Dim = new int[3];
-    setDimensions(1,1,1, multResult1Dim);
-
-
-
-    for(int p = 0; p < k - 1; p++){
-        int* tempColDim = new int[3];
-        setDimensions(QDim[0], 1, 1,tempColDim);
-
-        double* tempCol; // = new double[tempColDim[0]];
-        tempCol = getCol(Q, origDim, p);
-
-
-        double* colT = new double[tempColDim[0] * tempColDim[1]];
-        int* colTDim = new int[3];
-        setDimensions(1, QDim[1], 1, colTDim);
-        transpose(tempCol, tempColDim, colT, colTDim);
-
-        blasMultiply(colT, colTDim, newAtom, newAtomDim, &multResult1, multResult1Dim);
-
-        double* col = getCol(Q, QDim, p);
-
-
-        for (int n = 0; n < QDim[0]; n++){
-            setElement(Q, QDim, k-1, n, newAtom[n] - (multResult1 * col[n]));
-	}
-
-        delete [] colT;
-        delete [] colTDim;
-        delete [] tempColDim;
-        //delete [] tempCol;
-    }
-
-    delete [] origDim;
-    delete [] multResult1Dim;
-
-
-
-
-
-
-
-
-}
-
-
-
-
-
-
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 

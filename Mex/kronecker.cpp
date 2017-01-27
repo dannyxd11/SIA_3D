@@ -6,28 +6,7 @@
 
 #include <iostream>
 
-void kroneckerProduct(double* leftMatrix, int* leftMatrixDim, double* rightMatrix, int* rightMatrixDim, double* result, int* resultDim){
 
-    int newHeight = leftMatrixDim[0] * rightMatrixDim[0];
-    int newWidth = rightMatrixDim[1] * rightMatrixDim[1];
-
-    //result = new double[newHeight * newWidth];
-    //setDimensions(newHeight, newWidth, 1, resultDim);
-
-
-
-
-    for (int m = 0; m < leftMatrixDim[0]; m++){
-        for (int n = 0; n < leftMatrixDim[1]; n++){
-            for (int x = 0; x < rightMatrixDim[0]; x++){
-                for (int y = 0; y < rightMatrixDim[1]; y++){
-                    result[(n * rightMatrixDim[1] + y) * newHeight + m * rightMatrixDim[0] + x] = leftMatrix[n * leftMatrixDim[1] + m] * rightMatrix[y * rightMatrixDim[1] + x];
-                }
-            }
-        }
-    }
-
-}
 
 void mexFunction(int nlhs, mxArray *plhs[],
                 int nrhs, const mxArray *prhs[]){

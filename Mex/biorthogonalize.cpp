@@ -14,37 +14,6 @@
  *
  */
 
-void biorthogonalize(double* beta, int* betaDim, double* qk, int* qkDim, double* newAtom, int* newAtomDim, double nork){
-
-    // beta = beta - Qk * (new_atom'*beta) / nork;
-    // Width of second, height of first
-
-    double* multResult = new double[betaDim[1] * newAtomDim[0]];
-    int* multResultDim = new int[3];
-    setDimensions(betaDim[0],newAtomDim[0],1, multResultDim);
-
-    double* finalResult = new double[multResultDim[1]*qkDim[0]];
-    int* finalResultDim = new int[3];
-    setDimensions(qkDim[0], multResultDim[1], 1, finalResultDim);
-
-    double* transposed = new double[newAtomDim[0] * newAtomDim[1]];
-    int* transposedDim = new int[3];
-    transpose(newAtom, newAtomDim, transposed, transposedDim);
-
-    blasMultiply(transposed, transposedDim, beta, betaDim, multResult, multResultDim);
-    blasMultiply(qk, qkDim, multResult, multResultDim, finalResult, finalResultDim);
-
-    for (int n = 0; n < betaDim[0] * betaDim[1]; n++){
-        beta[n] -= finalResult[n] / nork;
-    }
-
-    delete [] multResult;
-    delete [] multResultDim;
-    delete [] finalResult;
-    delete [] finalResultDim;
-    delete [] transposed;
-    delete [] transposedDim;
-}
 
 
 

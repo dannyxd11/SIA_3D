@@ -16,53 +16,6 @@
  *
  */
 
-void reorthogonalize(double* Q, int* QDim, int zmax){
-
-    // k=size(Q,2);
-    int k = QDim[1];
-
-    //
-    for(int z = 0; z < zmax; z++){
-        double multResult1 = 0;
-        int* multResult1Dim = new int[3];
-        setDimensions(1,1,1, multResult1Dim);
-
-        for(int p = 0; p < k - 1; p++){
-
-
-            double* qpTranspose = new double[QDim[0]];
-            int* qpTransDim = new int[3];
-            setDimensions(QDim[0], 1, 1, qpTransDim);
-//
-            double* qp = getCol(Q,QDim,p);
-            int* qpDim = new int[3];
-            setDimensions(QDim[0], 1, 1, qpDim);
-//
-            double* qk = getCol(Q, QDim, k-1);
-            int* qkDim = new int[3];
-            setDimensions(QDim[0], 1, 1, qkDim);
-
-            transpose(qp, qpDim, qpTranspose, qpTransDim);
-            blasMultiply(qpTranspose, qpTransDim, qk, qkDim, &multResult1, multResult1Dim);
-
-            for (int n = 0; n < QDim[0]; n++){
-                setElement(Q, QDim, k-1, n, qk[n] - (multResult1 * qp[n]));
-            }
-
-            delete [] qpTranspose;
-            delete [] qpTransDim;
-            delete [] qpDim;
-            delete [] qkDim;
-        }
-
-        delete [] multResult1Dim;
-    }
-
-
-}
-
-
-
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     int* QDim = new int[3];
