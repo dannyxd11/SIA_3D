@@ -65,8 +65,8 @@ void ind2sub(int *dimensions, int index, int *q) {
 }
 
 void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim, double* Vz, int* VzDim,
-        double tol, int No, double toln, int lstep, int Max, int Maxp, double* indx, double* indy, double* indz,
-        double* h, double* c, double* Set_ind){
+        double tol, int No, double toln, int lstep, int Max, int Maxp, int* indx, int* indy, int* indz,
+        double* h, int* hDim, double* c, int* cDim, double* Set_ind, int* numat){
 // h, c, set_ind
 
 for(int i = 0; i < VxDim[0] * VyDim[0] * VzDim[0]; i++){
@@ -97,15 +97,15 @@ double* cp = new double[Nx * Ny * Nz]();
 int cpDim[] = {Lx, Ly, Lz};
 double* cc = new double[Nx * Ny * Nz]();
 int ccDim[] = {Lx, Ly, Lz};
-int cDim[] = {1, Lx * Ly * Lz, 1};
+
 
 int MaxInd = max(f, fDim);
 int MaxInt = f[MaxInd];
 double* Di1; //= new double[ReDim[0] * ReDim[1]];
 double* Di2; // = new double[ReDim[0] * ReDim[1]];
 double* Di3; // = new double[ReDim[0] * ReDim[1]];
-int numat = 0;
- Set_ind = new double[3 * Max];
+numat[0] = 0;
+Set_ind = new double[3 * Max];
 
 
 
@@ -128,7 +128,7 @@ initiateRangeVector(Diz, Nz);
 
 int numind = 0; //todo numel(indx);
 numind = 0;
-double* h = new double[Lx * Ly * Lz];
+
 
 if(sumOfSquares(f, fDim) * delta < 1e-9){
     c = new double[0];
@@ -166,21 +166,44 @@ int *q = new int[3];
 double* Set_ind_trans;
 int it;
 
+
+double* plane;
+double* col;
+double* Row = new double[VxDim[0]];
+int ColDim[] = {VxDim[0], 1, 1};
+int RowDim[] = {1, VxDim[0], 1};
+int planeDim[] = {ReDim[0], ReDim[1], 1};
+double* multResult1 = new double[VxDim[0]];
+int multResult1Dim[] = {1, VxDim[0], 1};
+double* multResult2 = new double[1];
+int multResult2Dim[] = {1, 1, 1};
+
     for (it = 0; it < Maxit2; it++) {
         for (int s = 0; s < lstep; s++) {
 
-            if ((numat + 1) <= numind) {
-                validateIndex(indx[numat + 1], Dix, DixDim);
-                validateIndex(indy[numat + 1], Diy, DiyDim);
-                validateIndex(indz[numat + 1], Diz, DizDim);
+            if ((numat[0] + 1) <= numind) {
+                validateIndex(indx[numat[0] + 1], Dix, DixDim);
+                validateIndex(indy[numat[0] + 1], Diy, DiyDim);
+                validateIndex(indz[numat[0] + 1], Diz, DizDim);
 
-                q[0] = indx[numat + 1];
-                q[1] = indy[numat + 1];
-                q[2] = indz[numat + 1];
+                q[0] = indx[numat[0] + 1];
+                q[1] = indy[numat[0] + 1];
+                q[2] = indz[numat[0] + 1];
 
-                set3DElement(cc, ccDim, q[1], q[2], q[3], 0) ;
+                set3DElement(cc, ccDim, q[0], q[1], q[2], 0) ;
                 for (int zk = 0; zk < Lz; zk++) {
-                    //todo    cc(q(1), q(2), q(3)) = cc(q(1), q(2), q(3)) + Vx(:,q(1))'*Re(:,:,zk)*Vy(:,q(2))*Vz(zk,q(3));
+                    //    cc(q(1), q(2), q(3)) = cc(q(1), q(2), q(3)) + Vx(:,q(1))'*Re(:,:,zk)*Vy(:,q(2))*Vz(zk,q(3));
+
+                    transpose(getCol(Vx, VxDim, q[0]), ColDim, Row, RowDim);
+                    col = getCol(Vy, VyDim, q[1]);
+                    plane = getPlane(Re, ReDim, zk);
+
+                    blasMultiply(Row, RowDim, plane, planeDim, multResult1, multResult1Dim);
+                    blasMultiply(multResult1, multResult1Dim, col, ColDim, multResult2, multResult2Dim);
+
+                    double val = get3DElement(cc, ccDim, q[0], q[1], q[2]) + multResult2[0] * getElement(Vz, VzDim, q[2], zk);;
+                    set3DElement(cc, ccDim, q[0], q[1], q[2], val);
+
                 }
             } else {
                 IP3D(Re, ReDim, Vx, VxDim, Vy, VyDim, Vz, VzDim, cc, ccDim);
@@ -206,8 +229,8 @@ int it;
                 /*
                  * [testq1, indq1] = ismember(vq, Set_ind, 'rows');
                  */
-                for(int k = 0; k < numat; k++){
-                    if(Set_ind[numat * 3] == vq[0] && Set_ind[numat * 3 + 1] == vq[2] && Set_ind[numat * 3 +2] == vq[2]){
+                for(int k = 0; k < numat[0]; k++){
+                    if(Set_ind[numat[0] * 3] == vq[0] && Set_ind[numat[0] * 3 + 1] == vq[2] && Set_ind[numat[0] * 3 +2] == vq[2]){
                         exists = 1;
                     }
                 }
@@ -215,10 +238,10 @@ int it;
                     /*
                      * Set_ind = [Set_ind; vq];
                      */
-                    Set_ind[(numat +1) * 3] = vq[0];
-                    Set_ind[(numat +1) * 3 + 1] = vq[1];
-                    Set_ind[(numat +1) * 3 + 1] = vq[2];
-                    numat += 1;
+                    Set_ind[(numat[0] +1) * 3] = vq[0];
+                    Set_ind[(numat[0] +1) * 3 + 1] = vq[1];
+                    Set_ind[(numat[0] +1) * 3 + 1] = vq[2];
+                    numat[0] += 1;
                 }
             }
 
@@ -240,22 +263,22 @@ int it;
             }
 
             double nor_new = sumOfSquares(Re, ReDim) * delta;
-            if (numat >= No || (nor_new < tol)) break;
+            if (numat[0] >= No || (nor_new < tol)) break;
 
 
         }
 
         // l = size(Set_ind, 1); Same as numat
 
-        for (int n = 0; n < numat; n++) {
+        for (int n = 0; n < numat[0]; n++) {
             c[n] = get3DElement(cp, cpDim, Set_ind[n * 3], Set_ind[n * 3 + 1], Set_ind[n * 3 + 2]);
         } // need to resize dimensions of c
 
         if (imp != 1) {
             delete [] Set_ind_trans;
-            Set_ind_trans = new double[3 * numat];
-            int Set_ind_trans_dim[] = {numat, 3, 1};
-            int Set_ind_dim[] = {3, numat, 1};
+            Set_ind_trans = new double[3 * numat[0]];
+            int Set_ind_trans_dim[] = {numat[0], 3, 1};
+            int Set_ind_dim[] = {3, numat[0], 1};
 
             transpose(Set_ind, Set_ind_dim, Set_ind_trans, Set_ind_trans_dim);
             /*
@@ -268,15 +291,15 @@ int it;
             Di2 = getCol(Set_ind_trans, Set_ind_trans_dim, 1);
             Di3 = getCol(Set_ind_trans, Set_ind_trans_dim, 2);
 
-            double* VxTemp = new double[VxDim[0] * numat];
-            double* VyTemp = new double[VyDim[0] * numat];
-            double* VzTemp = new double[VzDim[0] * numat];
+            double* VxTemp = new double[VxDim[0] * numat[0]];
+            double* VyTemp = new double[VyDim[0] * numat[0]];
+            double* VzTemp = new double[VzDim[0] * numat[0]];
 
-            int VxTempDim[] = {VxDim[0], numat, 1};
-            int VyTempDim[] = {VyDim[0], numat, 1};
-            int VzTempDim[] = {VzDim[0], numat, 1};
+            int VxTempDim[] = {VxDim[0], numat[0], 1};
+            int VyTempDim[] = {VyDim[0], numat[0], 1};
+            int VzTempDim[] = {VzDim[0], numat[0], 1};
 
-            for( int k = 0; k < numat; k++){
+            for( int k = 0; k < numat[0]; k++){
                 for( int x = 0; x < VxDim[0]; x++) {
                     VxTemp[k * VxDim[0] + x] = getElement(Vx, VxDim, Di1[k], x);
                 }
@@ -298,12 +321,29 @@ int it;
 
         double nore = sumOfSquares(Re, ReDim) * delta;
 
-        if (numat >= No || (nore < tol)) break;
+        if (numat[0] >= No || (nore < tol)) break;
     }
         if ((lstep != Max) && (it==Maxit2)){
             mexPrintf("%s Maximum number of iterations has been reached");
         }
 
+    /*
+     * Set_ind was stored width major, Matlab expects it height major- Transpose.
+     */
+
+    double* tempSetT = new double[numat[0] * 3];
+    int tempSetDimT[] = {numat[0], 3, 1};
+    int tempSetDim[] = {3, numat[0], 1};
+
+    transpose(Set_ind, tempSetDim, tempSetT, tempSetDimT);
+
+    delete [] Set_ind;
+    Set_ind = tempSetT;
+
+
+    delete [] Row;
+    delete [] multResult1;
+    delete [] multResult2;
 }
 
 
@@ -314,29 +354,49 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
     //todo validation
     double *f = mxGetPr(prhs[0]);
-    double *vx = mxGetPr(prhs[1]);
-    double *vy = mxGetPr(prhs[2]);
-    double *vz = mxGetPr(prhs[3]);
+    double *Vx = mxGetPr(prhs[1]);
+    double *Vy = mxGetPr(prhs[2]);
+    double *Vz = mxGetPr(prhs[3]);
     double tol = mxGetPr(prhs[4])[0];
-    int No = (int)mxGetData(prhs[5])[0];
+    int No = ((int*)mxGetData(prhs[5]))[0];
     double toln = mxGetPr(prhs[6])[0];
-    int lstep = (int)mxGetData(prhs[7])[0];
-    int Max = (int)mxGetData(prhs[8])[0];
-    int Maxp = (int)mxGetData(prhs[9])[0];
+    int lstep = ((int*)mxGetData(prhs[7]))[0];
+    int Max = ((int*)mxGetData(prhs[8]))[0];
+    int Maxp = ((int*)mxGetData(prhs[9]))[0];
     int* indx = (int*)mxGetData(prhs[10]);
     int* indy = (int*)mxGetData(prhs[10]);
     int* indz = (int*)mxGetData(prhs[10]);
 
-    function[h,Set_ind,c]=SPMP3D(f,Vx,Vy,Vz,tol,No,toln,lstep,Max,Maxp,indx,indy,indz);
-    m
+    int fDim[] = {mxGetDimensions(prhs[0])[0], mxGetDimensions(prhs[0])[1],mxGetDimensions(prhs[0])[2]};
+    int VxDim[] = {mxGetDimensions(prhs[1])[0], mxGetDimensions(prhs[1])[1],mxGetDimensions(prhs[1])[2]};
+    int VyDim[] = {mxGetDimensions(prhs[2])[0], mxGetDimensions(prhs[2])[1],mxGetDimensions(prhs[2])[2]};
+    int VzDim[] = {mxGetDimensions(prhs[3])[0], mxGetDimensions(prhs[3])[1],mxGetDimensions(prhs[3])[2]};
+
+    //todo indx,indy,indz not yet supported.
+
+    int hDims = 3; int hDim[] = {VxDim[0], VyDim[0], VzDim[1]};
+    plhs[0] = mxCreateNumericArray(hDims, hDim, mxDOUBLE_CLASS, mxREAL);
+    double* h = mxGetPr(plhs[0]);
 
 
 
+    double* Set_ind;
+    double* c = new double[VxDim[0] * VyDim[0] * VzDim[0]];
+    int cDim[] = {VxDim[0], VyDim[0], VzDim[0]};
+    int numat = 0;
+    int cDims = 3;
+
+    SPMP3D(f, fDim, Vx, VxDim, Vy, VyDim, Vz, VzDim, tol, No, toln, lstep, Max, Maxp, indx, indy, indz, h, hDim, c, cDim, Set_ind, &numat);
 
 
 
+    int Set_ind_dims = 3; int Set_ind_dim[] = {numat, 3, 1};
 
+    plhs[1] = mxCreateNumericArray(cDims, cDim, mxDOUBLE_CLASS, mxREAL);
+    plhs[2] = mxCreateNumericArray(Set_ind_dims, Set_ind_dim, mxDOUBLE_CLASS, mxREAL);
 
+    memcpy(plhs[1], c, cDim[0] * cDim[1] * cDim[2] * sizeof(double));
+    memcpy(plhs[2], Set_ind, numat * 3 * sizeof(double));
 }
 
 
