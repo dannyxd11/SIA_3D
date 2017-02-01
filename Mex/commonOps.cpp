@@ -40,6 +40,10 @@ double get3DElement(double* matrix, int* dim, int row, int col, int depth){
     return matrix[depth * dim[0] * dim[1] + col * dim[0] + row];
 }
 
+void set3DElement(double* matrix, int* dim, int row, int col, int depth, double value){
+    matrix[depth * dim[0] * dim[1] + col * dim[0] + row] = value;
+}
+
 double* getPlane(double* matrix, int* matrixDimensions, int depth) {
     return matrix + (matrixDimensions[0] * matrixDimensions[1] * depth);
 }
