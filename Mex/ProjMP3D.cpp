@@ -5,7 +5,9 @@
 #include "IPSP3D.cpp"	
 #include "hnew3D.cpp"
 #include "mex.h"
+#include <cmath>
 
+using namespace std;
 
 void ProjMP3d(double* h, double* re, int* reDim, double* v1, int* v1Dim, double* v2, int* v2Dim, double* v3, int* v3Dim, double* c, int* cDim, double toln, double max){
 
@@ -34,11 +36,11 @@ for(int it = 0; it < max; it++){
 
 
 
-	double maxValue = abs(cc[0]);
+	double maxValue = std::abs(cc[0]);
 	int n1 = 0;
 	for (int k = 0; k < ccDim[1]; k++){
-		if(abs(cc[k]) > maxValue){
-			maxValue = abs(cc[k]);
+		if(std::abs(cc[k]) > maxValue){
+			maxValue = std::abs(cc[k]);
 			n1 = k;
 		}
 	}
