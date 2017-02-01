@@ -27,6 +27,15 @@ int validateIndex(double indk, double *Di, int *DiDim) {
     return 0;
 }
 
+int ismember(double* matrix, int size, double member){
+    for (int i = 0; i < size; i++) {
+        if (Di[i] == indk) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 int max(double *matrix, int *dimensions) {
     double maxValue = std::abs(matrix[0]);
     int n1 = -1;
@@ -50,6 +59,7 @@ double sumOfSquares(double *matrix, int *dimensions) {
     for (int i = 0; i < dimensions[0] * dimensions[1] * dimensions[2]; i++) {
         sum += matrix[i] * matrix[i];
     }
+    return sum;
 }
 
 int numel(int *dimensions) {
@@ -172,9 +182,9 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
     if (nargin<6) | (isempty(No)==1)    No=Lx*Ly*Lz;end
     if (nargin<5) | (isempty(tol)==1)   tol=6.5;end;
     */
-    double *indx;
-    double *indy;
-    double *indz;
+    int *indx = new int[0];
+    int *indy = new int[0];
+    int *indz = new int[0];
     tol = 6.5;
 
     int numind = 0; // numel
@@ -357,6 +367,8 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
         if (tol != 0 && (noRe1[k] < tol)) {
             break;
         }
+
+
     }
 
     /*
@@ -378,6 +390,19 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
     */
 
     memcpy(h, H1, lx * ly * lz * sizeof(double));
+
+
+    delete [] Dix;
+    delete [] Diy;
+    delete [] Diz;
+    delete [] DixDim;
+    delete [] DiyDim;
+    delete [] DizDim;
+
+    delete [] tempFrowFim;
+    delete [] cMultResult;
+    delete [] cMultResultDim;
+
 
 
 }
@@ -459,5 +484,18 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
     OMP3D(f, fDim, dx, dxDim, dy, dyDim, dz, dzDim, tol, No,
           h, hDim, Di1, Di1Dim, Di2, Di2Dim, Di3, Di3Dim, beta, betaDim, c, cDim, q, qDim, noRe1);
+
+    delete [] fDim;
+    delete [] dxDim;
+    delete [] dyDim;
+    delete [] dzDim;
+    delete [] hDim;
+    delete [] Di1Dim;
+    delete [] Di2Dim;
+    delete [] Di3Dim;
+    delete [] betaDim;
+    delete [] cDim;
+    delete [] qDim;
+    delete [] noRe1Dim;
 }
 
