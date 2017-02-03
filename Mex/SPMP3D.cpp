@@ -1,12 +1,8 @@
-//
-// Created by Dan on 30/01/2017.
-//
-
 #include "mex.h"
 #include "commonOps.cpp"
 #include "ProjMP3D.cpp"
 #include "IP3D.cpp"
-#include "hnew3d.cpp"
+#include "hnew3D.cpp"
 #include <cmath>
 
 using namespace std;
@@ -24,8 +20,9 @@ int max(double *matrix, int *dimensions) {
     double maxValue = 0;
     int n1 = -1;
     for (int k = 0; k < dimensions[0] * dimensions[1] * dimensions[2]; k++) {
-        if (std::abs(matrix[k]) > maxValue) {
-            maxValue = std::abs(matrix[k]);
+        double cur = std::abs(matrix[k]);
+        if (cur > maxValue ) {
+            maxValue = cur;
             n1 = k;
         }
     }
@@ -38,7 +35,7 @@ int validateIndex(double indk, double *Di, int *DiDim) {
             return i;
         }
     }
-    mexErrMsgTxt("Index not in dictionary");
+    //mexErrMsgTxt("Index not in dictionary");
     return 0;
 }
 
@@ -58,15 +55,16 @@ int nonZeroNumel(double* m, int size){
 
 void ind2sub(int *dimensions, int index, int *q) {
     int plane = dimensions[0] * dimensions[1];
-    q[0] = index / plane;
+    q[2] = index / plane;
     int rem = index % plane;
     q[1] = rem / dimensions[0];
-    q[2] = rem % dimensions[1];
+    q[0] = rem % dimensions[1];
 }
 
+
 void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim, double* Vz, int* VzDim,
-        double tol, double No, double toln, int lstep, int Max, int Maxp, int* indx, int* indy, int* indz,
-        double* h, int* hDim, double* c, int* cDim, int* Set_ind, int* numat){
+            double tol, double No, double toln, int lstep, int Max, int Maxp, int* indx, int* indy, int* indz,
+            double* h, int* hDim, double* c, int* cDim, double* Set_ind, int* numat){
 // h, c, set_ind
 
     for(int i = 0; i < VxDim[0] * VyDim[0] * VzDim[0]; i++){
@@ -110,7 +108,7 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
      */
 
     double* cp = new double[Nx * Ny * Nz]();
-    int cpDim[] = {Lx, Ly, Lz};
+    int cpDim[] = {Nx, Ny, Nz};
     double* cc = new double[Nx * Ny * Nz]();
     int ccDim[] = {Nx, Ny, Nz};
 
@@ -127,9 +125,9 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
      *      Diz=1:Nz;
      */
 
-    int* Di1;
-    int* Di2;
-    int* Di3;
+    double* Di1;
+    double* Di2;
+    double* Di3;
     numat[0] = 0;
 
     //Set_ind = new int[3 * Max]();
@@ -213,7 +211,7 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
     int cscraDim[]= {1,1,1};
     double *h_new = new double[h_newDim[0] * h_newDim[1] * h_newDim[2]];
     int *q = new int[3];
-    int* Set_ind_trans = new int[3];
+    double* Set_ind_trans = new double[3];
     double* plane;
     double* col;
     double* Row = new double[VxDim[0]];
@@ -307,6 +305,7 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
                 int maxind = max(cc, ccDim);
                 ind2sub(ccDim, maxind, q);
 
+                //return;
 
                 /*
                  * MATLAB ≈
@@ -316,8 +315,9 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
                  *          end
                  */
 
-                if (cc[maxind] < tol2) {
-                    mexPrintf("SPMP3D stopped, max(|<f,q|/||q||) <= tol2 = %g\n", tol2);
+
+                if (abs(cc[maxind]) < tol2) {
+                    mexPrintf("SPMP3D stopped, max(|<f,q|/||q||) <= tol2 ");
 
                     /* Clean up memory
                      *
@@ -360,7 +360,6 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
              */
 
             int vq[] = {q[0], q[1], q[2]};
-
             if (numat[0] == 0) {
                 Set_ind[0] = vq[0];
                 Set_ind[1] = vq[1];
@@ -376,7 +375,7 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
 
                 int exists = 0;
                 for(int k = 0; k < numat[0]; k++){
-                    if(Set_ind[numat[0] * 3] == vq[0] && Set_ind[numat[0] * 3 + 1] == vq[2] && Set_ind[numat[0] * 3 +2] == vq[2]){
+                    if(Set_ind[k * 3] == vq[0] && Set_ind[k * 3 + 1] == vq[1] && Set_ind[k * 3 +2] == vq[2]){
                         exists = 1;
                     }
                 }
@@ -390,9 +389,9 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
                  */
 
                 if (exists == 0) {
-                    Set_ind[(numat[0] +1) * 3] = vq[0];
-                    Set_ind[(numat[0] +1) * 3 + 1] = vq[1];
-                    Set_ind[(numat[0] +1) * 3 + 2] = vq[2];
+                    Set_ind[(numat[0]) * 3] = vq[0];
+                    Set_ind[(numat[0]) * 3 + 1] = vq[1];
+                    Set_ind[(numat[0]) * 3 + 2] = vq[2];
                     numat[0] += 1;
                 }
             }
@@ -412,11 +411,14 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
              *         cp(q(1),q(2),q(3))=cp(q(1),q(2),q(3))+cscra;  %add coefficients of identical atoms
              */
 
+
+
+
             hnew3d(&cscra, cscraDim,
-                       getCol(Vx, VxDim, q[0]), tempVxCol,
-                       getCol(Vy, VyDim, q[1]), tempVyCol,
-                       getCol(Vz, VzDim, q[2]), tempVzCol,
-                       h_new, h_newDim);
+                   getCol(Vx, VxDim, q[0]), tempVxCol,
+                   getCol(Vy, VyDim, q[1]), tempVyCol,
+                   getCol(Vz, VzDim, q[2]), tempVzCol,
+                   h_new, h_newDim);
 
             set3DElement(cp, cpDim, q[0], q[1], q[2], get3DElement(cp, cpDim, q[0], q[1], q[2]) + cscra);
 
@@ -469,7 +471,7 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
             /* Set_ind_trans is reused, delete prior data before reusing. */
 
             delete [] Set_ind_trans;
-            Set_ind_trans = new int[3 * numat[0]];
+            Set_ind_trans = new double[3 * numat[0]];
             int Set_ind_trans_dim[] = {numat[0], 3, 1};
             int Set_ind_dim[] = {3, numat[0], 1};
 
@@ -513,6 +515,9 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
                     VzTemp[k * VzDim[0] + z] = getElement(Vz, VzDim, Di3[k], z);
                 }
             }
+
+
+
 
             /*
              * MATLAB ≈
@@ -559,7 +564,7 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
      */
 
     if ((lstep != Max) && (it==Maxit2)){
-        mexPrintf("%s Maximum number of iterations has been reached");
+        mexPrintf("Maximum number of iterations has been reached");
     }
 
 
@@ -587,10 +592,8 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
 
     delete [] h_new;
     delete [] q;
-
-	delete [] Set_ind_trans;
+    delete [] Set_ind_trans;
 }
-
 
 
 void mexFunction(int nlhs, mxArray *plhs[],
@@ -625,22 +628,22 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
 
 
-    int* Set_ind;
+    double* Set_ind;
     double* c = new double[VxDim[0] * VyDim[0] * VzDim[0]];
     int cDim[3] = {VxDim[0], VyDim[0], VzDim[0]};
     int numat = 0;
 	int cDims = 3;
-	Set_ind = new int[3 * Max]();
+	Set_ind = new double[3 * Max]();
 
 	SPMP3D(f, fDim, Vx, VxDim, Vy, VyDim, Vz, VzDim, tol, No, toln, lstep, Max, Maxp, indx, indy, indz, h, hDim, c, cDim, Set_ind, &numat);
 
     int Set_ind_dims = 3, Set_ind_dim[3] = {numat, 3, 1};
 
-    plhs[1] = mxCreateNumericArray(cDims, cDim, mxDOUBLE_CLASS, mxREAL);
-    plhs[2] = mxCreateNumericArray(Set_ind_dims, Set_ind_dim, mxINT32_CLASS, mxREAL);
+    plhs[2] = mxCreateNumericArray(cDims, cDim, mxDOUBLE_CLASS, mxREAL);
+    plhs[1] = mxCreateNumericArray(Set_ind_dims, Set_ind_dim, mxDOUBLE_CLASS, mxREAL);
     //plhs[2] = mxCreateNumericArray(Set_ind_dims, Set_ind_dim, mxDOUBLE_CLASS, mxREAL);
 
-    int* tempSetT = new int[numat * 3];
+    double* tempSetT = new double[numat * 3];
     int tempSetDimT[] = {numat, 3, 1};
     int tempSetDim[] = {3, numat, 1};
 
@@ -649,8 +652,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
     //delete [] Set_ind;
     //Set_ind = tempSetT;
 
-    memcpy(plhs[1], c, cDim[0] * cDim[1] * cDim[2] * sizeof(double));
-    memcpy(plhs[2], tempSetT, numat * 3 * sizeof(int));
+    memcpy(mxGetPr(plhs[2]), c, cDim[0] * cDim[1] * cDim[2] * sizeof(double));
+    memcpy(mxGetPr(plhs[1]), tempSetT, (numat) * 3 * sizeof(double));
 
     delete [] c;
     delete [] Set_ind;
