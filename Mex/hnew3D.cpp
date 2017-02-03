@@ -23,7 +23,7 @@ void hnew3d(double* cc, int* ccDimensions, double* v1, int* v1Dimensions, double
     double* aMatrix = new double[aMatrixDimensions[0] * aMatrixDimensions[1]];
 
 
-    matrixScalarMultiplication(v1, v1Dimensions, cc[0]);
+    //matrixScalarMultiplication(v1, v1Dimensions, cc[0]);
     transpose(v2, v2Dimensions, v2Trans, v2TransDimensions);
     blasMultiply(v1, v1Dimensions, v2Trans, v2TransDimensions, aMatrix, aMatrixDimensions);
 
@@ -38,7 +38,7 @@ void hnew3d(double* cc, int* ccDimensions, double* v1, int* v1Dimensions, double
                end
              *
              */
-            matrixScalarMultiplication(temp, aMatrixDimensions, v3[zk]);
+            matrixScalarMultiplication(temp, aMatrixDimensions, v3[zk] * cc[0]);
             setPlane(temp, aMatrixDimensions, hnew, hnewDimensions, zk);
             delete [] temp;
         }
