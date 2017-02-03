@@ -493,7 +493,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
     OMP3D(f, fDim, dx, dxDim, dy, dyDim, dz, dzDim, tol, No,
           h, hDim, Di1, Di1Dim, Di2, Di2Dim, Di3, Di3Dim, beta, betaDim, c, cDim, q, qDim, noRe1);
 
-<<<<<<< HEAD
     delete [] fDim;
     delete [] dxDim;
     delete [] dyDim;
@@ -506,20 +505,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
     delete [] cDim;
     delete [] qDim;
     delete [] noRe1Dim;
-=======
 
-	delete [] fDim;
-	delete [] dxDim;
-	delete [] dyDim;
-	delete [] dzDim;
-	delete [] hDim;
-	delete [] Di1Dim;
-	delete [] Di2Dim;
-	delete [] Di3Dim;
-	delete [] betaDim;
-	delete [] cDim;
-	delete [] qDim;
-	delete [] noRe1Dim;
->>>>>>> 5a2ae2dc1ea5a8687f48bff84073946498f5a660
 }
 
