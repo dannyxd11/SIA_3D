@@ -36,6 +36,14 @@ void setElement(double matrix[], int* matrixDimensions, int col, int row, double
     matrix[col * matrixDimensions[0] + row] = value;
 }
 
+int getElement(int* matrix, int* matrixDimensions,  int col, int row){
+    return matrix[col * matrixDimensions[0] + row];
+}
+
+void setElement(int matrix[], int* matrixDimensions, int col, int row, int value){
+    matrix[col * matrixDimensions[0] + row] = value;
+}
+
 double get3DElement(double* matrix, int* dim, int row, int col, int depth){
     return matrix[depth * dim[0] * dim[1] + col * dim[0] + row];
 }
@@ -101,6 +109,14 @@ void transpose(double* matrix, int* matrixDimensions, double* newMx, int* newMxD
         }}
 }
 
+void transpose(int* matrix, int* matrixDimensions, int* newMx, int* newMxDimensions){
+    setDimensions(matrixDimensions[1],matrixDimensions[0], 1, newMxDimensions);
+    for(int i = 0; i < matrixDimensions[0]; i++) {
+        for(int j = 0; j < matrixDimensions[1]; j++){
+            setElement(newMx, newMxDimensions, i, j, getElement(matrix, matrixDimensions, j, i));
+        }}
+}
+
 void getRow(double* matrix, int* matrixDim, int row, double* rowMatrix, int* rowDim){
     setDimensions(1, matrixDim[1], 1, rowDim);
     for(int i = 0; i < matrixDim[1]; i++){
@@ -109,6 +125,10 @@ void getRow(double* matrix, int* matrixDim, int row, double* rowMatrix, int* row
 }
 
 double* getCol(double* matrix, int* matrixDim, int col){
+    return &matrix[matrixDim[0] * col];
+}
+
+int* getCol(int* matrix, int* matrixDim, int col){
     return &matrix[matrixDim[0] * col];
 }
 
