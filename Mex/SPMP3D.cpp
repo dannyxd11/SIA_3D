@@ -65,7 +65,7 @@ void ind2sub(int *dimensions, int index, int *q) {
 }
 
 void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim, double* Vz, int* VzDim,
-        double tol, int No, double toln, int lstep, int Max, int Maxp, int* indx, int* indy, int* indz,
+        double tol, double No, double toln, int lstep, int Max, int Maxp, int* indx, int* indy, int* indz,
         double* h, int* hDim, double* c, int* cDim, int* Set_ind, int* numat){
 // h, c, set_ind
 
@@ -132,7 +132,7 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
     int* Di3;
     numat[0] = 0;
 
-    Set_ind = new int[3 * Max]();
+    //Set_ind = new int[3 * Max]();
 
     double *Dix = new double[Nx];
     double *Diy = new double[Ny];
@@ -234,7 +234,8 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
      *              if (numat+1)<=numind
      */
 
-    for (int it = 0; it < Maxit2; it++) {
+    int it;
+    for (it = 0; it < Maxit2; it++) {
         for (int s = 0; s < lstep; s++) {
             if ((numat[0] + 1) <= numind) {
 
@@ -317,6 +318,34 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
 
                 if (cc[maxind] < tol2) {
                     mexPrintf("SPMP3D stopped, max(|<f,q|/||q||) <= tol2 = %g\n", tol2);
+
+                    /* Clean up memory
+                     *
+                     *
+                     */
+                    delete [] Row;
+                    delete [] multResult1;
+                    delete [] multResult2;
+
+                    delete [] cp;
+                    delete [] cc;
+
+                    delete [] Dix;
+                    delete [] Diy;
+                    delete [] Diz;
+
+                    delete [] DixDim;
+                    delete [] DiyDim;
+                    delete [] DizDim;
+
+                    delete [] Re;
+                    delete [] ReDim;
+
+                    delete [] h_new;
+                    delete [] q;
+
+                    delete [] Set_ind_trans;
+
                     return;
                 }
             }
@@ -559,10 +588,7 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
     delete [] h_new;
     delete [] q;
 
-    delete [] Row;
-    delete [] multResult1;
-    delete [] multResult2;
-
+	delete [] Set_ind_trans;
 }
 
 
@@ -577,7 +603,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     double *Vy = mxGetPr(prhs[2]);
     double *Vz = mxGetPr(prhs[3]);
     double tol = mxGetPr(prhs[4])[0];
-    int No = (int)(mxGetPr(prhs[5])[0]);
+    double No = mxGetPr(prhs[5])[0];
     double toln = mxGetPr(prhs[6])[0];
     int lstep = (int)(mxGetPr(prhs[7])[0]);
     int Max = (int)(mxGetPr(prhs[8])[0]);
@@ -593,7 +619,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
     //todo indx,indy,indz not yet supported.
 
-    int hDims = 3; int hDim[] = {VxDim[0], VyDim[0], VzDim[1]};
+    int hDims = 3; int hDim[] = {VxDim[0], VyDim[0], VzDim[0]};
     plhs[0] = mxCreateNumericArray(hDims, hDim, mxDOUBLE_CLASS, mxREAL);
     double* h = mxGetPr(plhs[0]);
 
@@ -603,11 +629,10 @@ void mexFunction(int nlhs, mxArray *plhs[],
     double* c = new double[VxDim[0] * VyDim[0] * VzDim[0]];
     int cDim[3] = {VxDim[0], VyDim[0], VzDim[0]};
     int numat = 0;
-    int cDims = 3;
+	int cDims = 3;
+	Set_ind = new int[3 * Max]();
 
-    SPMP3D(f, fDim, Vx, VxDim, Vy, VyDim, Vz, VzDim, tol, No, toln, lstep, Max, Maxp, indx, indy, indz, h, hDim, c, cDim, Set_ind, &numat);
-
-
+	SPMP3D(f, fDim, Vx, VxDim, Vy, VyDim, Vz, VzDim, tol, No, toln, lstep, Max, Maxp, indx, indy, indz, h, hDim, c, cDim, Set_ind, &numat);
 
     int Set_ind_dims = 3, Set_ind_dim[3] = {numat, 3, 1};
 
@@ -628,7 +653,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     memcpy(plhs[2], tempSetT, numat * 3 * sizeof(int));
 
     delete [] c;
-    //delete [] Set_ind;
+    delete [] Set_ind;
 	delete [] tempSetT;
 }
 
