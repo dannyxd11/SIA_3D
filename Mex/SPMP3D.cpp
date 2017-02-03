@@ -73,6 +73,15 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
         c[0] = 0;
     }
 
+    /* MATLAB ≈
+     *
+     *  [Lx,Nx] = size(Vx);
+     *  [Ly,Ny] = size(Vy);
+     *  [Lz,Nz] = size(Vz);
+     *  delta = 1 / (Lx*Ly*Lz);
+     *  Nxyz = Lx*Ly*Lz;
+     */
+
     int Lx = VxDim[0];
     int Nx = VxDim[1];
     int Ly = VyDim[0];
@@ -94,21 +103,36 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
     //if (nargin<5)  | (isempty(No)==1)    No=Nxyz;end
     //if (nargin<4)  | (isempty(tol)==1)   tol=5e-4*sum(sum(sum(abs(f).^2)))*delta;end;
 
+    /* MATLAB ≈
+     *
+     *      cp=zeros(Nx,Ny,Nz);
+     *      cc=zeros(Nx,Ny,Nz);
+     */
+
     double* cp = new double[Nx * Ny * Nz]();
     int cpDim[] = {Lx, Ly, Lz};
     double* cc = new double[Nx * Ny * Nz]();
     int ccDim[] = {Nx, Ny, Nz};
 
 
-    int MaxInd = max(f, fDim);
-    double MaxInt = f[MaxInd];
-    int* Di1; //= new double[ReDim[0] * ReDim[1]];
-    int* Di2; // = new double[ReDim[0] * ReDim[1]];
-    int* Di3; // = new double[ReDim[0] * ReDim[1]];
+    /* MATLAB ≈
+     *
+     *      Di1=[];
+     *      Di2=[];
+     *      Di3=[];
+     *      numat=0;
+     *      Set_ind=[];
+     *      Dix=1:Nx;
+     *      Diy=1:Ny;
+     *      Diz=1:Nz;
+     */
+
+    int* Di1;
+    int* Di2;
+    int* Di3;
     numat[0] = 0;
+
     Set_ind = new int[3 * Max]();
-
-
 
     double *Dix = new double[Nx];
     double *Diy = new double[Ny];
@@ -130,18 +154,42 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
     int numind = 0; //todo numel(indx);
     numind = 0;
 
+    /*  MATLAB ≈
+     *
+     *      if sum(sum(sum(f).^2))*delta<1e-9;
+     *          c=[];
+     *          return
+     *      end
+     */
 
     if(sumOfSquares(f, fDim) * delta < 1e-9){
         c = new double[0];
         return;
     }
 
+    /* MATLAB ≈
+     *
+     *      Re=f;
+     *      tol2=1e-9;
+     */
+
     double *Re = new double[fDim[0] * fDim[1] * fDim[2]];
     int *ReDim = new int[3];
     setDimensions(fDim, ReDim);
     memcpy(Re, f, ReDim[0] * ReDim[1] * ReDim[2] * sizeof(double));
-
     double tol2 = 1e-9;
+
+
+    /*
+     * MATLAB ≈
+     *
+     *      imp=0;
+     *      if (lstep == -1) imp=1; end
+     *      if (imp==1) lstep=0;end
+     *      if (lstep == 0) Maxit2=1; lstep=Max;
+     *      else Maxit2=Max/lstep; end
+     */
+
     int imp = 0;
     int Maxit2 = 0;
 
@@ -155,8 +203,9 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
     }
 
     /*
-     *  Constant depending on dictionary size, move allocation outside loop to reduce unnessecary overhead
+     *  Constant depending on dictionary size, move allocation outside loop to reduce unnecessary overhead
      */
+
     int tempVxCol[] = {VxDim[0], 1, 1};
     int tempVyCol[] = {VyDim[0], 1, 1};
     int tempVzCol[] = {VzDim[0], 1, 1};
@@ -165,9 +214,6 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
     double *h_new = new double[h_newDim[0] * h_newDim[1] * h_newDim[2]];
     int *q = new int[3];
     int* Set_ind_trans = new int[3];
-    int it;
-
-
     double* plane;
     double* col;
     double* Row = new double[VxDim[0]];
@@ -179,17 +225,56 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
     double* multResult2 = new double[1];
     int multResult2Dim[] = {1, 1, 1};
 
-    for (it = 0; it < Maxit2; it++) {
-        for (int s = 0; s < lstep; s++) {
 
+    /*
+     * MATLAB ≈
+     *
+     *      for it=1:Maxit2;
+     *          for s=1:lstep;
+     *              if (numat+1)<=numind
+     */
+
+    for (int it = 0; it < Maxit2; it++) {
+        for (int s = 0; s < lstep; s++) {
             if ((numat[0] + 1) <= numind) {
+
+                /*
+                 * MATLAB ≈
+                 *
+                 *          [testx,qx]=ismember(indx(numat+1),Dix);
+                 *          [testy,qy]=ismember(indy(numat+1),Diy);
+                 *          [testz,qz]=ismember(indz(numat+1),Diz);
+                 *          if testx ~=1  error('Demanded index (x) %d is out of dictionary',indx(numat+1));end
+                 *          if testy ~=1  error('Demanded index (y) %d is out of dictionary',indy(numat+1));end
+                 *          if testz ~=1  error('Demanded index (z) %d is out of dictionary',indz(numat+1));end
+                 */
+
                 validateIndex(indx[numat[0] + 1], Dix, DixDim);
                 validateIndex(indy[numat[0] + 1], Diy, DiyDim);
                 validateIndex(indz[numat[0] + 1], Diz, DizDim);
 
+
+                /*
+                 * MATLAB ≈
+                 *
+                 *            q(1)=indx(numat+1);
+                 *            q(2)=indy(numat+1);
+                 *            q(3)=indz(numat+1);
+                 */
+
                 q[0] = indx[numat[0] + 1];
                 q[1] = indy[numat[0] + 1];
                 q[2] = indz[numat[0] + 1];
+
+
+                /*
+                 * MATLAB ≈
+                 *
+                 *      cc(q(1),q(2),q(3))=0;
+                 *      for zk=1:Lz;
+                 *          cc(q(1),q(2),q(3))= cc(q(1),q(2),q(3))+Vx(:,q(1))'*Re(:,:,zk)*Vy(:,q(2))*Vz(zk,q(3));
+                 *      end
+                 */
 
                 set3DElement(cc, ccDim, q[0], q[1], q[2], 0) ;
                 for (int zk = 0; zk < Lz; zk++) {
@@ -207,16 +292,43 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
 
                 }
             } else {
+
+                /*
+                 * MATLAB ≈
+                 *
+                 *        [cc] = IP3D_mex(Re,Vx,Vy,Vz);
+                 *        [max_c,maxind] = max(abs(cc(:)));
+                 *        [q(1),q(2),q(3)] = ind2sub(size(cc),maxind);
+                 *
+                 */
+
                 IP3d(Re, ReDim, Vx, VxDim, Vy, VyDim, Vz, VzDim, cc, ccDim);
                 int maxind = max(cc, ccDim);
-
                 ind2sub(ccDim, maxind, q);
+
+
+                /*
+                 * MATLAB ≈
+                 *          if max_c < tol2
+                 *              fprintf('%s stopped, max(|<f,D>|)<= tol2=%g.\n',name,tol2);
+                 *              return;
+                 *          end
+                 */
 
                 if (cc[maxind] < tol2) {
                     mexPrintf("SPMP3D stopped, max(|<f,q|/||q||) <= tol2 = %g\n", tol2);
                     return;
                 }
             }
+
+            /*
+             * MATLAB ≈
+             *
+             *      vq=[q(1),q(2),q(3)];
+             *      if(isempty(Set_ind)==1)
+             *      Set_ind=vq;
+             *      numat=1;
+             */
 
             int vq[] = {q[0], q[1], q[2]};
 
@@ -226,29 +338,50 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
                 Set_ind[2] = vq[2];
                 numat[0] += 1;
             } else {
-                int exists = 0;
+
                 /*
-                 * [testq1, indq1] = ismember(vq, Set_ind, 'rows');
+                 * MATLAB ≈
+                 *
+                 *      [testq1, indq1] = ismember(vq, Set_ind, 'rows');
                  */
+
+                int exists = 0;
                 for(int k = 0; k < numat[0]; k++){
                     if(Set_ind[numat[0] * 3] == vq[0] && Set_ind[numat[0] * 3 + 1] == vq[2] && Set_ind[numat[0] * 3 +2] == vq[2]){
                         exists = 1;
                     }
                 }
+
+                /*
+                 * MATLAB ≈
+                 *
+                 *         if testq1==0
+                 *         Set_ind =[Set_ind;vq];
+                 *         numat=numat+1;
+                 */
+
                 if (exists == 0) {
-                    /*
-                     * Set_ind = [Set_ind; vq];
-                     */
                     Set_ind[(numat[0] +1) * 3] = vq[0];
                     Set_ind[(numat[0] +1) * 3 + 1] = vq[1];
-                    Set_ind[(numat[0] +1) * 3 + 1] = vq[2];
+                    Set_ind[(numat[0] +1) * 3 + 2] = vq[2];
                     numat[0] += 1;
                 }
             }
 
+            /*
+             * MATLAB ≈
+             *
+             *          cscra=cc(q(1),q(2),q(3));
+             */
 
             double cscra = get3DElement(cc, ccDim, q[0], q[1], q[2]);
 
+            /*
+             * MATLAB ≈
+             *
+             *         h_new = hnew3D_mex(cscra, Vx(:,q(1)), Vy(:,q(2)), Vz(:, q(3)));
+             *         cp(q(1),q(2),q(3))=cp(q(1),q(2),q(3))+cscra;  %add coefficients of identical atoms
+             */
 
             hnew3d(&cscra, cscraDim,
                        getCol(Vx, VxDim, q[0]), tempVxCol,
@@ -258,10 +391,24 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
 
             set3DElement(cp, cpDim, q[0], q[1], q[2], get3DElement(cp, cpDim, q[0], q[1], q[2]) + cscra);
 
+            /*
+             * MATLAB ≈
+             *
+             *       h=h+h_new; %Approximated Image
+             *       Re=Re-h_new;%
+             */
+
             for(int k = 0; k < h_newDim[0] * h_newDim[1] * h_newDim[2]; k++) {
                 h[k] += h_new[k];
                 Re[k] -= h_new[k];
             }
+
+            /*
+             * MATLAB ≈
+             *
+             *       nor_new=sum(sum(sum(abs(Re).^2)))*delta;
+             *       if (numat>=No | (nor_new < tol)) break;end;
+             */
 
             double nor_new = sumOfSquares(Re, ReDim) * delta;
             if (numat[0] >= No || (nor_new < tol)) break;
@@ -269,24 +416,50 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
 
         }
 
-        // l = size(Set_ind, 1); Same as numat
+
+        /*
+         * l = size(Set_ind, 1); Unnecessary since same as numat
+         *
+         * MATLAB  ≈
+         *
+         *      for n=1:l;
+         *           c(n)=cp(Set_ind(n,1),Set_ind(n,2),Set_ind(n,3));
+         *      end
+         */
 
         for (int n = 0; n < numat[0]; n++) {
             c[n] = get3DElement(cp, cpDim, Set_ind[n * 3], Set_ind[n * 3 + 1], Set_ind[n * 3 + 2]);
-        } // need to resize dimensions of c
+        }
+        setDimensions(1, numat[0], 1, cDim); //todo need to resize dimensions of c
+
+        /*
+         * MATLAB ≈ if imp ~= 1
+         */
 
         if (imp != 1) {
+            /* Set_ind_trans is reused, delete prior data before reusing. */
+
             delete [] Set_ind_trans;
             Set_ind_trans = new int[3 * numat[0]];
             int Set_ind_trans_dim[] = {numat[0], 3, 1};
             int Set_ind_dim[] = {3, numat[0], 1};
 
+
+            /* MATLAB implementation stores Set_ind as [x1, y1, z1; x2, y2, z2 ....]
+             * C++ implementation stores Set_ind as [x1, x2 .... ; y1, y2 .... ; z1, z2 ....] since it is stored column
+             * major and no need for resizing. Hence transpose for equivilent
+             */
+
             transpose(Set_ind, Set_ind_dim, Set_ind_trans, Set_ind_trans_dim);
+
             /*
-            Di1 = Set_ind(:,1);
-            Di2 = Set_ind(:,2);
-            Di3 = Set_ind(:,3);
-            */
+             * MATLAB ≈
+             *
+             *      Di1=Set_ind(:,1);
+             *      Di2=Set_ind(:,2);
+             *      Di3=Set_ind(:,3);
+             */
+
 
             Di1 = getCol(Set_ind_trans, Set_ind_trans_dim, 0);
             Di2 = getCol(Set_ind_trans, Set_ind_trans_dim, 1);
@@ -312,8 +485,24 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
                 }
             }
 
+            /*
+             * MATLAB ≈
+             *
+             *      [h,Re,c]=ProjMP3D(h,Re,Vx(:,Di1),Vy(:,Di2),Vz(:,Di3),c,toln,Maxp);
+             *      l=numel(c);
+             */
+
             ProjMP3d(h, Re, ReDim, VxTemp, VxTempDim, VyTemp, VyTempDim, VzTemp, VzTempDim, c, cDim, toln, Maxp);
             int l = nonZeroNumel(c, VxDim[0] * VyDim[0] * VzDim[0]);
+
+            /*
+             * MATLAB ≈
+             *
+             *      for n=1:l;
+             *          cp(Set_ind(n,1),Set_ind(n,2),Set_ind(n,3))=c(n);
+             *      end
+             *
+             */
 
             for (int n = 0; n < l; n++) {
                 set3DElement(cp, cpDim, Set_ind[n * 3], Set_ind[n * 3 +1], Set_ind[n * 3 + 2], c[n]);
@@ -324,15 +513,30 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
             delete [] VzTemp;
         }
 
-        double nore = sumOfSquares(Re, ReDim) * delta;
+        /*
+         * MATLAB ≈
+         *
+         *      nore=sum(sum(sum(abs(Re).^2)))*delta;
+         *      if (numat>=No | (nore < tol)) break;end;
+         */
 
+        double nore = sumOfSquares(Re, ReDim) * delta;
         if (numat[0] >= No || (nore < tol)) break;
     }
+
+
+    /*
+     * MATLAB ≈ if (lstep ~=Max) & (it==Maxit2) fprintf('%s Maximum number of iterations has been reached\n',name);
+     */
 
     if ((lstep != Max) && (it==Maxit2)){
         mexPrintf("%s Maximum number of iterations has been reached");
     }
 
+
+    /*
+     * Clean up Memory
+     */
 
     delete [] Row;
     delete [] multResult1;
