@@ -70,7 +70,6 @@ int numel(int *dimensions) {
 }
 
 double vectorNorm(double *matrix, int size) {
-    usleep(1000000);
     double sum = 0;
     for (int n = 0; n < size; n++) {
         sum += matrix[n] * matrix[n];
@@ -482,7 +481,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
     int *betaDim = new int[3];
     int *cDim = new int[3];
     int *qDim = new int[3];
-    int *noRe1Dim = new int[3];
 
     setDimensions(fDim, hDim);
     setDimensions(1, dxDim[1] * dyDim[1] * dzDim[1], 1, Di1Dim);
@@ -491,7 +489,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
     setDimensions(dxDim[0] * dyDim[0] * dzDim[0], 1, 1, betaDim);
     setDimensions(dxDim[0], dxDim[0], dxDim[0], cDim);
     setDimensions(dxDim[0] * dyDim[0] * dzDim[0], 1, 1, qDim); // gets changed by multiply at end of routine
-    setDimensions(1, 1, 1, noRe1Dim);
 
     int HNdim = 3, HDims[3] = {hDim[0], hDim[1], hDim[2]};
     int Di1Ndim = 3, Di1Dims[3] = {1, 1, 1};
@@ -522,6 +519,9 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
     // Most output arguments sizes arent known until after the routine is completed, create MatLab arrays after routine has finished.
 
+
+    int noRe1Dim[] = {1, Di1Dim[1], 1};
+
     plhs[0] = mxCreateNumericArray(HNdim, HDims, mxDOUBLE_CLASS, mxREAL);
     plhs[1] = mxCreateNumericArray(Di1Ndim, Di1Dims, mxDOUBLE_CLASS, mxREAL);
     plhs[2] = mxCreateNumericArray(Di2Ndim, Di2Dims, mxDOUBLE_CLASS, mxREAL);
@@ -529,16 +529,16 @@ void mexFunction(int nlhs, mxArray *plhs[],
     plhs[4] = mxCreateNumericArray(betaNdim, betaDims, mxDOUBLE_CLASS, mxREAL);
     plhs[5] = mxCreateNumericArray(cNdim, cDims, mxDOUBLE_CLASS, mxREAL);
     plhs[6] = mxCreateNumericArray(qNdim, qDims, mxDOUBLE_CLASS, mxREAL);
-    plhs[7] = mxCreateNumericArray(noRe1NDim, {1, Di1Dim[1], 1}, mxDOUBLE_CLASS, mxREAL);
+    plhs[7] = mxCreateNumericArray(noRe1NDim, noRe1Dim, mxDOUBLE_CLASS, mxREAL);
 
-    memcpy(mxGetPr(plhs[0]), h, sizeof(double) * hDims[0] * hDims[1] * hDims[2]);
+    memcpy(mxGetPr(plhs[0]), h, sizeof(double) * hDim[0] * hDim[1] * hDim[2]);
     memcpy(mxGetPr(plhs[1]), Di1, sizeof(double) * Di1Dims[0] * Di1Dims[1] * Di1Dims[2]);
     memcpy(mxGetPr(plhs[2]), Di2, sizeof(double) * Di2Dims[0] * Di2Dims[1] * Di2Dims[2]);
     memcpy(mxGetPr(plhs[3]), Di3, sizeof(double) * Di3Dims[0] * Di3Dims[1] * Di3Dims[2]);
     memcpy(mxGetPr(plhs[4]), beta, sizeof(double) * betaDims[0] * betaDims[1] * betaDims[2]);
     memcpy(mxGetPr(plhs[5]), c, sizeof(double) * cDims[0] * cDims[1] * cDims[2]);
     memcpy(mxGetPr(plhs[6]), q, sizeof(double) * qDims[0] * qDims[1] * qDims[2]);
-    memcpy(mxGetPr(plhs[7]), noRe1, sizeof(double) * numat); //todo Define numat
+    memcpy(mxGetPr(plhs[7]), noRe1, sizeof(double) * Di1Dims[2]); //todo Define numat
 
 
 
@@ -565,7 +565,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     delete [] betaDim;
     delete [] cDim;
     delete [] qDim;
-    delete [] noRe1Dim;
+   // delete [] noRe1Dim;
 
 }
 
