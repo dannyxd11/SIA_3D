@@ -212,7 +212,7 @@ void biorthogonalize(double* beta, int* betaDim, double* qk, int* qkDim, double*
 void kroneckerProduct(double* leftMatrix, int* leftMatrixDim, double* rightMatrix, int* rightMatrixDim, double* result, int* resultDim){
 
     int newHeight = leftMatrixDim[0] * rightMatrixDim[0];
-    int newWidth = rightMatrixDim[1] * rightMatrixDim[1];
+    int newWidth = leftMatrixDim[1] * rightMatrixDim[1];
 
     //result = new double[newHeight * newWidth];
     setDimensions(newHeight, newWidth, 1, resultDim);
