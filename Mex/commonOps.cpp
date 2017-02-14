@@ -4,6 +4,7 @@
 #include "MyBLAS.h"
 #include <stdlib.h>
 #include <iostream>
+#include <cstring>
 
 void setDimensions(int height, int width, int depth, int* dim){
     dim[0] = height;
