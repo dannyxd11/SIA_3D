@@ -25,8 +25,7 @@ int validateIndex(double indk, double *Di, int *DiDim) {
             return i;
         }
     }
-    //mexErrMsgTxt("Index not in dictionary");
-    std::cout << "Index not in dictionary" << std::endl;
+    mexErrMsgTxt("Index not in dictionary");
     return 0;
 }
 
@@ -232,21 +231,13 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
         } else {
 
             IP3d(re, reDim, dx, dxDim, dy, dyDim, dz, dzDim, cc, ccDim);
-            //std::cout << ccDim[0] << "," << ccDim[1] << "," << ccDim[2] << std::endl;
-//            for(int i = 0; i < ccDim[0] * ccDim[1] * ccDim[2]; i++){
-//                std::cout << cc[i] << ", ";
-//            }
-//            std::cout << std::endl;
-
 
             int maxind = max(cc, ccDim);
             ind2sub(ccDim, maxind, q);
-            std::cout << cc[maxind] << std::endl;
             if (std::abs(cc[maxind]) < tol2) {
                 //k = k - 1;
 
-                //mexPrintf("OMP3D stopped, max(|<f,q|/||q||) <= tol2 = %g\n", tol2);
-                std::cout << "OMP3D stopped, max(|<f,q|/||q||) <= tol2\n" << std::endl;
+                mexPrintf("OMP3D stopped, max(|<f,q|/||q||) <= tol2 = %g\n", tol2);
                 break;
             }
         }
@@ -321,9 +312,7 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
         beta(:,k) =Q(:,k) / nork; // kth biorthogonal function
         */
         betaDim[1] = QDim[1];
-        std::cout << betaDim[0] << "," << betaDim[1] << "," << betaDim[2] << std::endl;
 
-        std::cout << std::endl;
         //memcpy(getCol(beta, betaDim, k), getCol(Q, QDim, k), QDim[0] * sizeof(double));
         for (int i = 0; i < betaDim[0]; i++) {
             beta[i + k * betaDim[0]] = Q[k * QDim[0] + i] / nork;
@@ -370,8 +359,7 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
         */
 
         noRe1[k] = pow(vectorNorm(re, numel(hDim)), 2) * delta;
-        std::cout << vectorNorm(re, numel(hDim)) << std::endl;
-        std::cout << delta << std::endl;
+
         /*
         re = reshape(re,Lx,Ly,Lz);
         */
@@ -394,8 +382,6 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
         delete[] new_atomDim;
 
         if (tol != 0 && (noRe1[k] < tol)) {
-
-            std::cout << k << "," << noRe1[k] << "," << tol <<"BREAKING!!!!" << std::endl;
             break;
         }
 
@@ -407,7 +393,6 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
 
     int *tempRowDim = new int[3];
     setDimensions(1, fDim[0] * fDim[1] * fDim[2], 1, tempRowDim);
-    std::cout << "betaDim " << betaDim[1] << std::endl;
     setDimensions(1, betaDim[1], 1, cDim);
 
     blasMultiply(f, tempRowDim, beta, betaDim, c, cDim);
