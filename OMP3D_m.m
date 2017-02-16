@@ -124,7 +124,7 @@ for k=1:H
  % new_atom=kronecker(Dz(:,q(3)),new_atom2);
   
   %Q(:,k) is the orthogonalization of newatom  w.r.t Q(:,1),..., Q(:,k-1) 
-  [Q]=orthogonalize(Q,new_atom);
+  [Q]=Orthogonalize(Q,new_atom);
   % re-orthogonalization of Q(:,k)  w.r.t Q(:,1),..., Q(:,k-1) 
   [Q]=Reorthogonalize(Q,zmax);
   %[Q] = o_reorthogonalize(Q,new_atom,zmax);
@@ -148,8 +148,6 @@ for k=1:H
 %
 %
   h=f(:)'*Q(:,k)*Q(:,k)';
-  size(Q)
-  size(f) 
   Re=Re(:)-h';
   H1=H1+h;
   nore1(k)=(norm(Re))^2*(delta);
@@ -161,8 +159,6 @@ for k=1:H
 end
 c=f(:)'*beta;
 H=reshape(H1,Lx,Ly,Lz);
-disp size(Q)
-size(Q)
 %id=numel(Di1);
 %for n=1:id;
 %H=H+Dx(:,Di1(n))*c(n)*Dy(:,Di2(n))';
