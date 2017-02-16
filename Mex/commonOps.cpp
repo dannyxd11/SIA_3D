@@ -183,7 +183,7 @@ void biorthogonalize(double* beta, int* betaDim, double* qk, int* qkDim, double*
 
     double* multResult = new double[betaDim[1] * newAtomDim[0]];
     int* multResultDim = new int[3];
-    setDimensions(betaDim[0],newAtomDim[0],1, multResultDim);
+    setDimensions(newAtomDim[1],betaDim[1],1, multResultDim);
 
     double* finalResult = new double[multResultDim[1]*qkDim[0]];
     int* finalResultDim = new int[3];
