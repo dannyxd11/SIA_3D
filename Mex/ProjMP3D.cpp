@@ -11,7 +11,7 @@ using namespace std;
 
 void ProjMP3d(double* h, double* re, int* reDim, double* v1, int* v1Dim, double* v2, int* v2Dim, double* v3, int* v3Dim, double* c, int* cDim, double toln, double max){
 
-double delta 	= 	1 / (v1Dim[0] * v2Dim[0] * v3Dim[0]);
+double delta 	= 	1 / (double)(v1Dim[0] * v2Dim[0] * v3Dim[0]);
 double tol2		=	1e-11;
 
 int* hnewDim = new int[3];
@@ -31,7 +31,7 @@ setDimensions(1, v1Dim[1], 1, ccDim);
 
 
 for(int it = 0; it < max; it++){
-    double* cc = new double[ccDim[0] * ccDim[1]];
+    double* cc = new double[ccDim[0] * ccDim[1]]();
 	IPSP3d(re, reDim, v1, v1Dim, v2, v2Dim, v3, v3Dim, cc, ccDim);
 
 

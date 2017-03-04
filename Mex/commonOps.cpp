@@ -4,6 +4,7 @@
 #include "MyBLAS.h"
 #include <stdlib.h>
 #include <iostream>
+#include <cstring>
 
 void setDimensions(int height, int width, int depth, int* dim){
     dim[0] = height;
@@ -182,7 +183,7 @@ void biorthogonalize(double* beta, int* betaDim, double* qk, int* qkDim, double*
 
     double* multResult = new double[betaDim[1] * newAtomDim[0]];
     int* multResultDim = new int[3];
-    setDimensions(betaDim[0],newAtomDim[0],1, multResultDim);
+    setDimensions(newAtomDim[1],betaDim[1],1, multResultDim);
 
     double* finalResult = new double[multResultDim[1]*qkDim[0]];
     int* finalResultDim = new int[3];
@@ -211,7 +212,7 @@ void biorthogonalize(double* beta, int* betaDim, double* qk, int* qkDim, double*
 void kroneckerProduct(double* leftMatrix, int* leftMatrixDim, double* rightMatrix, int* rightMatrixDim, double* result, int* resultDim){
 
     int newHeight = leftMatrixDim[0] * rightMatrixDim[0];
-    int newWidth = rightMatrixDim[1] * rightMatrixDim[1];
+    int newWidth = leftMatrixDim[1] * rightMatrixDim[1];
 
     //result = new double[newHeight * newWidth];
     setDimensions(newHeight, newWidth, 1, resultDim);

@@ -126,9 +126,11 @@ for it=1:Maxit2;
        
 %=========================================================================
       cscra=cc(q(1),q(2),q(3)); 
-      for zk=1:Lz
-       h_new(:,:,zk)=Vx(:,q(1))*cscra*Vy(:,(q(2)))'.*Vz(zk,q(3));
-      end %to be added to the previous approximation
+      
+      h_new = hnew3D(cscra, Vx(:,q(1)), Vy(:,q(2)), Vz(:,q(3)));
+      %for zk=1:Lz
+       %h_new(:,:,zk)=Vx(:,q(1))*cscra*Vy(:,(q(2)))'.*Vz(zk,q(3));
+      %end %to be added to the previous approximation
 %=========================================================
       cp(q(1),q(2),q(3))=cp(q(1),q(2),q(3))+cscra;  %add coefficients of identical atoms
       h=h+h_new; %Approximated Image
