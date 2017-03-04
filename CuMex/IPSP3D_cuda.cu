@@ -53,6 +53,8 @@ public:
     __host__ __device__ double* getElement(int i){return &elements[i];};
     __host__ __device__ h_Matrix getCol(int i){h_Matrix newMatrix(getColDouble(i),height, 1, 1); return newMatrix;};
     __host__ __device__ h_Matrix getPlane(int i){h_Matrix newMatrix(&elements[height * width * i], height, width, 1); return newMatrix;};
+
+    __host__ __device__ ~h_Matrix(){if(!elements){delete [] elements;}; if(!devElements){delete [] devElements;};};
 };
 
 
@@ -65,29 +67,38 @@ __device__ void multiplyCuda(double* a, double* b, double* c, int lda, int ldb, 
 	int y = threadIdx.y; //col
 	int x = threadIdx.x; //row
 
-	if (y < m && x < n){
-	   double cellSum = 0;
-			 if (op1 == CUBLAS_OP_N && op2 == CUBLAS_OP_N){
-				 for(int i = 0; i < k; i++){
-					cellSum += a[lda * i + y] * b[ldb * x + i] * alpha[0];
-					//printf("\ni: %d, y: %d, x: %d, lda: %d, ldb: %d, alpha: %f, temp: %f, cellSum: %f, aVal: %f, bVal: %f, aind %d, bind: %d", i, y, x, lda, ldb, alpha[0], a[lda * i + y] * b[ldb * x + i] * alpha[0], cellSum, a[lda * i + y], b[ldb * x + i], lda*i+y, ldb*x+i);
-				 }
-			 }else if(op1 == CUBLAS_OP_T && op2 == CUBLAS_OP_N){
-				 for(int i = 0; i < k; i++){
-					cellSum += a[lda * y + i] * b[ldb * x + i] * alpha[0];
-				 }
-			 }else if(op1 == CUBLAS_OP_N && op2 == CUBLAS_OP_T){
-				 for(int i = 0; i < k; i++){
-					cellSum += a[lda * i + y] * b[ldb * i + x] * alpha[0];
-				 }
-			 }else if(op1 == CUBLAS_OP_T && op2 == CUBLAS_OP_T){
-				 for(int i = 0; i < k; i++){
-					cellSum += a[lda * y + i] * b[ldb * i + x] * alpha[0];
-				 }
-			 }
-			c[ldc * y + x] = beta[0] * c[ldc * y + x] + cellSum;
-			//printf("\nThreadID %d,%d, A: %f, / %d    B: %f, / %d    C: %f / %d \t K: %d, M: %d, N: %d\n", x,y,a[lda * x + y],lda * x + y,b[ldb * y + x],ldb * y + x,c[ldc * y + x],ldc * y + x, k, m, n);
-   }
+	int block_size = 8; //todo allow variable block_sizes
+
+	for(y; y < m; y += block_size){
+		for(x = threadIdx.x; x < n; x += block_size ){
+			printf("%d,%d,%d,%d\n",y,m,x,n);
+			if (y < m && x < n){
+				double cellSum = 0;
+				if (op1 == CUBLAS_OP_N && op2 == CUBLAS_OP_N){
+					for(int i = 0; i < k; i++){
+						cellSum += a[lda * i + y] * b[ldb * x + i] * alpha[0];
+						//printf("\ni: %d, y: %d, x: %d, lda: %d, ldb: %d, alpha: %f, temp: %f, cellSum: %f, aVal: %f, bVal: %f, aind %d, bind: %d", i, y, x, lda, ldb, alpha[0], a[lda * i + y] * b[ldb * x + i] * alpha[0], cellSum, a[lda * i + y], b[ldb * x + i], lda*i+y, ldb*x+i);
+					}
+				}else if(op1 == CUBLAS_OP_T && op2 == CUBLAS_OP_N){
+					for(int i = 0; i < k; i++){
+						//printf("%d,\n", lda * y + i);
+						cellSum += a[lda * y + i] * b[ldb * x + i] * alpha[0];
+						//printf("\ni: %d, y: %d, x: %d,threadidx: %d, threadidy: %d, lda: %d, ldb: %d, alpha: %f, temp: %f, cellSum: %f, aVal: %f, bVal: %f, aind %d, bind: %d, m: %d, n: %d, k: %d", i, y, x,threadIdx.x, threadIdx.y, lda, ldb, alpha[0], a[lda * y + i] * b[ldb * x + i] * alpha[0], cellSum, a[lda * y + i], b[ldb * x + i], lda * y + i, ldb*x+i, m,n,k);
+					}
+				}else if(op1 == CUBLAS_OP_N && op2 == CUBLAS_OP_T){
+					for(int i = 0; i < k; i++){
+						cellSum += a[lda * i + y] * b[ldb * i + x] * alpha[0];
+					}
+				}else if(op1 == CUBLAS_OP_T && op2 == CUBLAS_OP_T){
+					for(int i = 0; i < k; i++){
+						cellSum += a[lda * y + i] * b[ldb * i + x] * alpha[0];
+					}
+				}
+				//printf("\nRow: %d,%d, A: %f, / %d    B: %f, / %d    C: %f / %d \t K: %d, M: %d, N: %d\n", x,y,a[lda * x + y],lda * x + y,b[ldb * y + x],ldb * y + x,c[ldc * y + x],ldc * y + x, k, m, n);
+				c[ldc * y + x] = beta[0] * c[ldc * y + x] + cellSum;
+			}
+		}
+	}
 }
 
 __device__ void matrixMultiplyCuda(h_Matrix* a, h_Matrix* b, h_Matrix* c, int m, int n, int k, cublasOperation_t op1, cublasOperation_t op2, double* alpha, double* beta){
@@ -95,11 +106,10 @@ __device__ void matrixMultiplyCuda(h_Matrix* a, h_Matrix* b, h_Matrix* c, int m,
 	int ldb = b->height;
 	int ldc = m;
 	multiplyCuda(a->elements, b->elements, c->elements,lda, ldb, ldc, m, n, k, op1, op2, alpha, beta);
-	c->height = ldc;
-	c->width = k;
+	//printf("%d", c->height);
+	//c->height = ldc;
+	//c->width = k;
 }
-
-
 
 __device__ void matrixMultiplyCuda(h_Matrix* a, h_Matrix* b, double* c, int m, int n, int k, cublasOperation_t op1, cublasOperation_t op2, double* alpha, double* beta){
 	int lda = a->height;
@@ -112,10 +122,7 @@ __device__ void matrixMultiplyCuda(h_Matrix* a, h_Matrix* b, h_Matrix* c, int m,
 	double* beta = new double[1]();
 	matrixMultiplyCuda(a, b, c, m, n, k, op1, op2, alpha, beta);
 }
-
-
-
-
+//
 __device__ void matrixMultiplyCuda(h_Matrix* a, h_Matrix* b, h_Matrix* c, cublasOperation_t op1, cublasOperation_t op2, double* alpha){
   	 int m;
      int n;
@@ -241,7 +248,7 @@ h_Matrix copyMatrixToHost(h_Matrix *deviceMatrix){
 __global__ void d_IPSP3d(h_Matrix* re, h_Matrix* v1, h_Matrix* v2, h_Matrix* v3, h_Matrix* cc){
 
 	double scalar = 1;
-	__shared__ int n1, l3;)
+	__shared__ int n1, l3;
     __shared__ h_Matrix aMatrix;
 	__shared__ double *aMatrixElements;
 
@@ -250,8 +257,9 @@ __global__ void d_IPSP3d(h_Matrix* re, h_Matrix* v1, h_Matrix* v2, h_Matrix* v3,
 		l3 = v3->height;
 		aMatrixElements = new double[re->width]();
 		aMatrix.elements = aMatrixElements;
-		aMatrix.width =; 8; aMatrix.height = aMatrix.depth = 1;
+		aMatrix.width = 8; aMatrix.height = aMatrix.depth = 1;
 	}
+	__syncthreads();
 
 		for(int i = 0; i < n1; i++){
 			cc->setElement(i, 0.0);
@@ -268,6 +276,41 @@ __global__ void d_IPSP3d(h_Matrix* re, h_Matrix* v1, h_Matrix* v2, h_Matrix* v3,
     return;
 }
 
+__global__ void d_IP3d(h_Matrix* re, h_Matrix* v1, h_Matrix* v2, h_Matrix* v3, h_Matrix* cc){
+
+
+
+	double scalar = 1;
+    __shared__ h_Matrix aMatrix;
+	__shared__ double *aMatrixElements;
+
+	if(threadIdx.x == 0 && threadIdx.y == 0){
+		// Initialise shared calculation matrix
+		aMatrixElements = new double[v1->width * re->width]();
+		aMatrix.elements = aMatrixElements;
+		aMatrix.width = re->width; aMatrix.height = v1->width; aMatrix.depth = 1;
+	}
+    __syncthreads();
+    matrixMultiplyCuda(v1, &re->getPlane(0), &aMatrix, v1->height, v1->width, re->width, CUBLAS_OP_T, CUBLAS_OP_N, &scalar);
+    __syncthreads();
+	if(threadIdx.x == 0 && threadIdx.y == 0){
+		for( int i = 0; i < aMatrix.width * aMatrix.height; i++){
+			printf("%f, ", aMatrix.elements[i]); //40 * threadIdx.y + threadIdx.x]);
+		}
+	}
+//		for(int i = 0; i < v3->width; i++){
+//			for(int j = 0; j < v3->height; j++){
+//				matrixMultiplyCuda(v1, &re->getPlane(j), &aMatrix, v1->height, v1->width, re->width, CUBLAS_OP_T, CUBLAS_OP_N, &scalar);
+//				__syncthreads();
+//				matrixMultiplyCuda(&aMatrix, v2, &cc->getPlane(i), aMatrix.height, aMatrix.width, v2->width, CUBLAS_OP_N, CUBLAS_OP_N, v3->getElement(i, j), &scalar);
+//				__syncthreads();
+//				//if (threadIdx.x == 0){printf("i: %d, j: %d, V3 Val:%f, \n", i, j, v3->getElement(i,j)[0]);}
+//			}
+//		}
+
+    return;
+}
+
 
 int main() {
 
@@ -276,21 +319,22 @@ int main() {
     double dyElements[] = {0.3536, 0.3536, 0.3536, 0.3536, 0.3536, 0.3536, 0.3536, 0.3536, 0.4976, 0.4785, 0.4410, 0.3865, 0.3172, 0.2357, 0.1451, 0.0490, 0.4904, 0.4157, 0.2778, 0.0975, -0.0975, -0.2778, -0.4157, -0.4904, 0.4785, 0.3172, 0.0490, -0.2357, -0.4410, -0.4976, -0.3865, -0.1451, 0.4619, 0.1913, -0.1913, -0.4619, -0.4619, -0.1913, 0.1913, 0.4619, 0.4410, 0.0490, -0.3865, -0.4785, -0.1451, 0.3172, 0.4976, 0.2357, 0.4157, -0.0975, -0.4904, -0.2778, 0.2778, 0.4904, 0.0975, -0.4157, 0.3865, -0.2357, -0.4785, 0.0490, 0.4976, 0.1451, -0.4410, -0.3172, 0.3536, -0.3536, -0.3536, 0.3536, 0.3536, -0.3536, -0.3536, 0.3536, 0.3172, -0.4410, -0.1451, 0.4976, -0.0490, -0.4785, 0.2357, 0.3865, 0.2778, -0.4904, 0.0975, 0.4157, -0.4157, -0.0975, 0.4904, -0.2778, 0.2357, -0.4976, 0.3172, 0.1451, -0.4785, 0.3865, 0.0490, -0.4410, 0.1913, -0.4619, 0.4619, -0.1913, -0.1913, 0.4619, -0.4619, 0.1913, 0.1451, -0.3865, 0.4976, -0.4410, 0.2357, 0.0490, -0.3172, 0.4785, 0.0975, -0.2778, 0.4157, -0.4904, 0.4904, -0.4157, 0.2778, -0.0975, 0.0490, -0.1451, 0.2357, -0.3172, 0.3865, -0.4410, 0.4785, -0.4976, 0.0490, 0.1451, 0.2357, 0.3172, 0.3865, 0.4410, 0.4785, 0.4976, 0.0975, 0.2778, 0.4157, 0.4904, 0.4904, 0.4157, 0.2778, 0.0975, 0.1451, 0.3865, 0.4976, 0.4410, 0.2357, -0.0490, -0.3172, -0.4785, 0.1913, 0.4619, 0.4619, 0.1913, -0.1913, -0.4619, -0.4619, -0.1913, 0.2357, 0.4976, 0.3172, -0.1451, -0.4785, -0.3865, 0.0490, 0.4410, 0.2778, 0.4904, 0.0975, -0.4157, -0.4157, 0.0975, 0.4904, 0.2778, 0.3172, 0.4410, -0.1451, -0.4976, -0.0490, 0.4785, 0.2357, -0.3865, 0.3536, 0.3536, -0.3536, -0.3536, 0.3536, 0.3536, -0.3536, -0.3536, 0.3865, 0.2357, -0.4785, -0.0490, 0.4976, -0.1451, -0.4410, 0.3172, 0.4157, 0.0975, -0.4904, 0.2778, 0.2778, -0.4904, 0.0975, 0.4157, 0.4410, -0.0490, -0.3865, 0.4785, -0.1451, -0.3172, 0.4976, -0.2357, 0.4619, -0.1913, -0.1913, 0.4619, -0.4619, 0.1913, 0.1913, -0.4619, 0.4785, -0.3172, 0.0490, 0.2357, -0.4410, 0.4976, -0.3865, 0.1451, 0.4904, -0.4157, 0.2778, -0.0975, -0.0975, 0.2778, -0.4157, 0.4904, 0.4976, -0.4785, 0.4410, -0.3865, 0.3172, -0.2357, 0.1451, -0.0490, 0.3536, -0.3536, 0.3536, -0.3536, 0.3536, -0.3536, 0.3536, -0.3536, 1.0000, 0, 0, 0, 0, 0, 0, 0, 0, 1.0000, 0, 0, 0, 0, 0, 0, 0, 0, 1.0000, 0, 0, 0, 0, 0, 0, 0, 0, 1.0000, 0, 0, 0, 0, 0, 0, 0, 0, 1.0000, 0, 0, 0, 0, 0, 0, 0, 0, 1.0000, 0, 0, 0, 0, 0, 0, 0, 0, 1.0000, 0, 0, 0, 0, 0, 0, 0, 0, 1.0000};
     double dzElements[] = {0.5774,0.5774,0.5774,0.7887,0.5774,0.2113,0.7071,0.0000,-0.7071,0.5774,-0.5774,-0.5774,0.4082,-0.8165,0.4082,0.2113,-0.5774,0.7887,0.2113,0.5774,0.7887,0.4082,0.8165,0.4082,0.5774,0.5774,-0.5774,0.7071,0.0000,-0.7071,0.7887,-0.5774,0.2113,0.5774,-0.5774,0.5774,1.0000,0,0,0,1.0000,0,0,0,1.0000};
     double reElements[] = {8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6};
-    double* ccElements = new double[40]();
+    double* ccElements = new double[ 40 * 40 * 15]();
 
     printDeviceDetails();
 
-	//Initialise Matrix containers
+	//Initialise matrix containers on host
     std::cout << "Initializing.." << std::endl;
     h_Matrix h_dx(dxElements, 8, 1, 1);
     h_Matrix h_dy(dyElements, 8, 1, 1);
     h_Matrix h_dz(dzElements, 3, 1, 1);
-    h_Matrix h_re(reElements, 8, 8, 8);
+    h_Matrix h_re(reElements, 8, 8, 3);
+    //h_Matrix h_cc(ccElements, 40, 40, 15);
     h_Matrix h_cc(ccElements, 1, 40, 1);
 
     cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1024*1024*32);
 
-    //Copy Matrix's to    std::cout << "Device Details... \n" << std::endl;
+    //Copy Matrix's to device
     std::cout << "Copying to Device.." << std::endl;
     h_Matrix* d_dx = copyMatrixToDevice(&h_dx);
     h_Matrix* d_dy = copyMatrixToDevice(&h_dy);
@@ -304,26 +348,14 @@ int main() {
     h_Matrix h_c(cElements, 1, 8, 1);
     h_Matrix* d_c = copyMatrixToDevice(&h_c);
 
-    double *devScalar;
-    double scalar = 1;
-
-    cudaCheck( cudaMalloc(&devScalar, sizeof(double)));
-    cudaCheck( cudaMemcpy(devScalar, &scalar, sizeof(double), cudaMemcpyHostToDevice));
-
-
-    //status = cublasDgemm(handle, CUBLAS_OP_T, CUBLAS_OP_N, 1, h_dx.height, h_re.height, &scalar, &d_dx->elements[0], h_dx.height, &d_re->elements[0], h_re.height, 0, &aMatrix[0], 1);
-    //status = cublasDgemm(handle, CUBLAS_OP_T, CUBLAS_OP_N, h_re.height, h_re.height, 1, &scalar, &d_dx->elements[0], 1, &d_re->elements[0], 1, 0, &aMatrix[0], h_re.height);
-    //MatrixMultiplyBLAS(handle, d_dx->elements, d_re->elements, aMatrix, h_dx.height, 1, h_re.width, CUBLAS_OP_T, CUBLAS_OP_N);
-    //matrixMultiplyCuda<<<1,threadsPerBlock>>>(d_dx, d_re, d_c, CUBLAS_OP_T, CUBLAS_OP_N, devScalar);
 
     dim3 threadsPerBlock(8, 8);
-    for(int i = 0; i < 1000; i++){
-    d_IPSP3d<<< 1, threadsPerBlock>>>(d_re, d_dx, d_dy, d_dz, d_cc);
-    }
+    // Input needs to be cols
+     d_IPSP3d<<< 1, threadsPerBlock>>>(d_re, d_dx, d_dy, d_dz, d_cc);
 
-
+    //d_IP3d<<< 1, threadsPerBlock>>>(d_re, d_dx, d_dy, d_dz, d_cc);
+    cudaCheck(cudaDeviceSynchronize());
     //matrixMultiplyCudaKernel<<<1,threadsPerBlock>>>(d_dx, d_re, d_c, 1, h_re.width, h_dx.height, CUBLAS_OP_T, CUBLAS_OP_N, devScalar);
-   // double* testOutput = new double[h_dx.height * h_re.width]();
 
     // Either works :)
     //h_Matrix results = 	copyMatrixToHost(d_cc);
@@ -331,9 +363,9 @@ int main() {
 
     printf("%d,%d,%d, %f\n", h_cc.height, h_cc.width, h_cc.depth, h_cc.elements[0]);
 
-    for(int i = 0; i < h_cc.height * h_cc.width * h_cc.depth; i++){
-    	std::cout << h_cc.elements[i] << ", " << std::endl;
-    }
+//    for(int i = 0; i < h_cc.height * h_cc.width * h_cc.depth; i++){
+//    	std::cout << h_cc.elements[i] << ", " << std::endl;
+//    }
 
     cudaError_t err = cudaGetLastError();
     
