@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 inline void cudaAssert(cudaError_t code, const char *file, int line){
-	if (code != cudaSuccess){ fprintf(stderr, "CudaAssert %s %s %d\n", cudaGetErrorString(code), file, line); exit(code);}
+	if (code != cudaSuccess){ fprintf(stderr, "\nCudaAssert %s %s %d\n", cudaGetErrorString(code), file, line); exit(code);}
 }
 
 void printDeviceDetails(){
@@ -42,7 +42,7 @@ public:
     double* elements;
     double* devElements;
     int height, width, depth;
-    __host__ __device__ h_Matrix() : height(1), width(1), depth(1) {};
+    __host__ __device__ h_Matrix() : height(1), width(1), depth(1) { elements = NULL; };
     __host__ __device__ h_Matrix(int height, int width, int depth) : height(height), width(width), depth(depth) { elements = new double[height*width*depth](); };
     __host__ __device__ h_Matrix(double* elements, int height, int width, int depth) : height(height), width(width), depth(depth), elements(elements) {};
     __host__ __device__ int numel (){return height * width * depth;};
@@ -89,6 +89,7 @@ __device__ void multiplyCuda(double* a, double* b, double* c, int lda, int ldb, 
 				}else if(op1 == CUBLAS_OP_N && op2 == CUBLAS_OP_T){
 					for(int i = 0; i < k; i++){
 						cellSum += a[lda * i + y] * b[ldb * i + x] * alpha[0];
+						//printf("\ni: %d, y: %d, x: %d,threadidx: %d, threadidy: %d, lda: %d, ldb: %d, alpha: %f, temp: %f, cellSum: %f, aVal: %f, bVal: %f, aind %d, bind: %d, m: %d, n: %d, k: %d, cind: %d", i, y, x,threadIdx.x, threadIdx.y, lda, ldb, alpha[0], a[lda * i + y] * b[ldb * i + x] * alpha[0], cellSum, a[lda * i + y], b[ldb * i + x], lda * i + y, ldb * i + x, m,n,k, ldc * x + y);
 					}
 				}else if(op1 == CUBLAS_OP_T && op2 == CUBLAS_OP_T){
 					for(int i = 0; i < k; i++){
@@ -197,11 +198,12 @@ h_Matrix* copyMatrixToDevice(h_Matrix *hostMatrix){
     cudaCheck(cudaMemcpy(deviceMatrix, &hostMatrix, sizeof(h_Matrix), cudaMemcpyHostToDevice));
 
     // Copy Contents of Array from host to device
-    cudaCheck(cudaMemcpy(deviceElements, hostMatrix->elements, hostMatrix->numel() * sizeof(double), cudaMemcpyHostToDevice));
+    if(hostMatrix->elements != NULL){
+    	cudaCheck(cudaMemcpy(deviceElements, hostMatrix->elements, hostMatrix->numel() * sizeof(double), cudaMemcpyHostToDevice));
 
     // Copy address of array to matrix elements
-    cudaCheck(cudaMemcpy(&(deviceMatrix->elements), &deviceElements, sizeof(double *), cudaMemcpyHostToDevice));
-
+    	cudaCheck(cudaMemcpy(&(deviceMatrix->elements), &deviceElements, sizeof(double *), cudaMemcpyHostToDevice));
+    }
     // Copy remaining members to device
     cudaCheck(cudaMemcpy(&(deviceMatrix->height), &hostMatrix->height, sizeof(int), cudaMemcpyHostToDevice));
     cudaCheck(cudaMemcpy(&(deviceMatrix->width), &hostMatrix->width, sizeof(int), cudaMemcpyHostToDevice));
@@ -232,8 +234,7 @@ void copyMatrixToHost(h_Matrix *hostMatrix, h_Matrix *deviceMatrix){
     cudaCheck(cudaMemcpy(&hostMatrix->devElements, &deviceMatrix->elements, sizeof(double *), cudaMemcpyDeviceToHost));
 
     // Copy the elements from the device to the elements container on the host
-    cudaCheck(cudaMemcpy(hostMatrix->elements, hostMatrix->devElements,sizeof(double) * hostMatrix->numel(),cudaMemcpyDeviceToHost));
-
+    cudaCheck(cudaMemcpy(hostMatrix->elements, hostMatrix->devElements, sizeof(double) * hostMatrix->numel(),cudaMemcpyDeviceToHost));
 }
 
 h_Matrix copyMatrixToHost(h_Matrix *deviceMatrix){
@@ -242,9 +243,6 @@ h_Matrix copyMatrixToHost(h_Matrix *deviceMatrix){
     copyMatrixToHost(&hostMatrix, deviceMatrix);
     return hostMatrix;
 }
-
-
-
 
 __global__ void d_IPSP3d(h_Matrix* re, h_Matrix* v1, h_Matrix* v2, h_Matrix* v3, h_Matrix* cc){
 
@@ -279,8 +277,6 @@ __global__ void d_IPSP3d(h_Matrix* re, h_Matrix* v1, h_Matrix* v2, h_Matrix* v3,
 
 __global__ void d_IP3d(h_Matrix* re, h_Matrix* v1, h_Matrix* v2, h_Matrix* v3, h_Matrix* cc){
 
-
-
 	double scalar = 1;
     __shared__ h_Matrix aMatrix;
 	__shared__ double *aMatrixElements;
@@ -292,20 +288,6 @@ __global__ void d_IP3d(h_Matrix* re, h_Matrix* v1, h_Matrix* v2, h_Matrix* v3, h
 		aMatrix.width = re->width; aMatrix.height = v1->width; aMatrix.depth = 1;
 	}
     __syncthreads();
-//    matrixMultiplyCuda(v1, &re->getPlane(0), &aMatrix, v1->width, v1->height, re->width, CUBLAS_OP_T, CUBLAS_OP_N, &scalar);
-//    __syncthreads();
-//    matrixMultiplyCuda(&aMatrix, v2, &cc->getPlane(0), aMatrix.height, v2->width, v2->height, CUBLAS_OP_N, CUBLAS_OP_N, v3->getElement(0, 0), &scalar);
-//	if(threadIdx.x == 0 && threadIdx.y == 0){
-//		for( int i = 0; i < aMatrix.width * aMatrix.height; i++){
-//			printf("%f, ", aMatrix.elements[i]); //40 * threadIdx.y + threadIdx.x]);
-//		}
-//	}
-//
-//    			if(threadIdx.x == 0 && threadIdx.y == 0){
-//    				for( int i = 0; i < cc->width * cc->height; i++){
-//    					printf("%f, ", cc->elements[i]); //40 * threadIdx.y + threadIdx.x]);
-//    				}
-//    			}
 
 		for(int i = 0; i < v3->width; i++){
 			for(int j = 0; j < v3->height; j++){
@@ -313,16 +295,38 @@ __global__ void d_IP3d(h_Matrix* re, h_Matrix* v1, h_Matrix* v2, h_Matrix* v3, h
 				__syncthreads();
 				matrixMultiplyCuda(&aMatrix, v2, &cc->getPlane(i), aMatrix.height, v2->width, v2->height, CUBLAS_OP_N, CUBLAS_OP_N, v3->getElement(i, j), &scalar);
 				__syncthreads();
-				//if (threadIdx.x == 0){printf("i: %d, j: %d, V3 Val:%f, \n", i, j, v3->getElement(i,j)[0]);}
 			}
 		}
 
-//			if(threadIdx.x == 0 && threadIdx.y == 0){
-//				for( int i = 0; i < cc->width * cc->height * cc->depth; i++){
-//					printf("%f, ", cc->elements[i]); //40 * threadIdx.y + threadIdx.x]);
-//				}
-//			}
 
+    return;
+}
+
+__global__ void d_hnew3d(double* cc, h_Matrix* v1, h_Matrix* v2, h_Matrix* v3, h_Matrix* hnew){
+
+	double scalar = 1;
+    __shared__ h_Matrix *aMatrix;
+    __shared__ double *aMatrixElements;
+
+	if(threadIdx.x == 0 && threadIdx.y == 0){
+		// Need to declare elements first since we want it to be shared
+		aMatrixElements = new double[v1->height * v2->height];
+		aMatrix = new h_Matrix(aMatrixElements, v1->height, v2->height, 1);
+	}
+
+	__syncthreads();
+    matrixMultiplyCuda(v1, v2, aMatrix, v1->height, v2->height, v1->width, CUBLAS_OP_N, CUBLAS_OP_T, &scalar);
+    __syncthreads();
+
+    for(int zk = 0; zk < v3->height; zk++){
+    	hnew->getPlane(zk).setElement(threadIdx.x, threadIdx.y, aMatrix->getElement(threadIdx.x, threadIdx.y)[0] * cc[0] * v3->getElement(zk)[0]);
+    }
+    __syncthreads();
+    if(threadIdx.x == 0 && threadIdx.y == 0){
+    for(int i = 0; i < hnew->numel(); i++){
+    	printf("%f, ", hnew->elements[i]);
+    }
+    }
     return;
 }
 
@@ -370,20 +374,39 @@ int main() {
 
     dim3 threadsPerBlock(8, 8);
     // Input needs to be cols
-    d_IPSP3d<<< 1, threadsPerBlock>>>(d_re, d_dx, d_dy, d_dz, d_cc);
-
+    //d_IPSP3d<<< 1, threadsPerBlock>>>(d_re, d_dx, d_dy, d_dz, d_cc);
     //d_IP3d<<< 1, threadsPerBlock>>>(d_re, d_dx, d_dy, d_dz, d_cc);
+
+    h_Matrix h_hnew(8,8,3);// = new h_Matrix();
+    h_Matrix* d_hnew = copyMatrixToDevice(&h_hnew);
+
+    double scalar = 1;
+    double* devScalar;
+    cudaCheck(cudaMalloc(&devScalar, sizeof(double)));
+    cudaCheck(cudaMemcpy(devScalar, &scalar, sizeof(double), cudaMemcpyHostToDevice));
+
+
+    d_hnew3d<<< 1, threadsPerBlock>>>(devScalar, d_dx,d_dy,d_dz,d_hnew);
     cudaCheck(cudaDeviceSynchronize());
     //matrixMultiplyCudaKernel<<<1,threadsPerBlock>>>(d_dx, d_re, d_c, 1, h_re.width, h_dx.height, CUBLAS_OP_T, CUBLAS_OP_N, devScalar);
 
     // Either works :)
  //    h_Matrix results = 	copyMatrixToHost(d_cc);
-       copyMatrixToHost(&h_cc, d_cc);
+       //copyMatrixToHost(&h_cc, d_cc);
+
       //printf("%d,%d,%d, %f\n", h_cc.height, h_cc.width, h_cc.depth, h_cc.elements[0]);
 
-    for(int i = 0; i < h_cc.height * h_cc.width * h_cc.depth; i++){
-    	std::cout << h_cc.elements[i] << ", " << std::endl;
-    }
+// Print results CC
+//    for(int i = 0; i < h_cc.height * h_cc.width * h_cc.depth; i++){
+//    	std::cout << h_cc.elements[i] << ", " << std::endl;
+//    }
+
+       copyMatrixToHost(&h_hnew, d_hnew);
+       //printf("%d, %d, %d, %f", h_hnew->height, h_hnew->width, h_hnew->depth, h_hnew->elements[0]);
+// Print results hnew
+       for(int i = 0; i < h_hnew.height * h_hnew.width * h_hnew.depth; i++){
+    	   std::cout << h_hnew.elements[i] << ", ";
+       }
 
     cudaError_t err = cudaGetLastError();
     
