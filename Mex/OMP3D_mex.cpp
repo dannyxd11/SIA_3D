@@ -206,9 +206,11 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
     //double* Di1 = new double[H];
     //double* Di2 = new double[H];
     //double* Di3 = new double[H];
+
     double* cc = new double[nx * ny * nz]();
     int ccDim[] = {nx, ny, nz};
     double* h = new double[fDim[0] * fDim[1] * fDim[2]]();
+
     int hDim[] = {reDim[0], reDim[1], reDim[2]};
 
     int *q = new int[3];
@@ -279,6 +281,7 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
             //new_atom=kronecker(Dz(:,q(3)),new_atom2);
             //o_reorthogonalize(Q,new_atom,zmax);
 
+
             orthogonalize(Q, QDim, new_atom, new_atomDim); // Need to sort out resizing			
             reorthogonalize(Q, QDim, zmax);
 
@@ -299,6 +302,7 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
             Q[k * QDim[0] + n] /= nork;
         }
 
+
 		//setDimensions(QDim, new_atomDim);
         
 		if (k > 0) {
@@ -313,9 +317,11 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
         */
         betaDim[1] = QDim[1];
 
+
         //memcpy(getCol(beta, betaDim, k), getCol(Q, QDim, k), QDim[0] * sizeof(double));
         for (int i = 0; i < betaDim[0]; i++) {
             beta[i + k * betaDim[0]] = Q[k * QDim[0] + i] / nork;
+
         }
 
 
@@ -336,12 +342,14 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
 
         double *multresult = new double[QDim[0] * QDim[0]];
         int *multresultDim = new int[3];
+
         setDimensions(QDim[0], QDim[0], 1, multresultDim);
 		
 
 
         blasMultiply(getCol(Q, QDim, k), tempQkDim, getCol(Q, QDim, k), tempQkRowDim, multresult, multresultDim);
 		setDimensions(1, multresultDim[1], 1, hDim);
+
         blasMultiply(f, tempFVectorDim, multresult, multresultDim, h, hDim);
 
         /*
@@ -471,6 +479,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     int *cDim = new int[3];
     int *qDim = new int[3];
 
+
     setDimensions(fDim, hDim);
     setDimensions(1, dxDim[1] * dyDim[1] * dzDim[1], 1, Di1Dim);
     setDimensions(1, dxDim[1] * dyDim[1] * dzDim[1], 1, Di2Dim);
@@ -478,6 +487,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     setDimensions(dxDim[0] * dyDim[0] * dzDim[0], 1, 1, betaDim);
     setDimensions(dxDim[0], dxDim[0], dxDim[0], cDim);
     setDimensions(dxDim[0] * dyDim[0] * dzDim[0], 1, 1, qDim); // gets changed by multiply at end of routine
+
 
     int HNdim = 3;
     int Di1Ndim = 3;
@@ -496,6 +506,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     double* beta = new double[dxDim[1] * dyDim[1] * dzDim[1]]();
     double* c = new double[dxDim[0] * dyDim[0] * dzDim[0]];
     double* q = new double[dxDim[1] * dyDim[1] * dzDim[1]];
+
     double* noRe1 = new double[dxDim[1] * dyDim[1] * dzDim[1]];
 
 
@@ -507,6 +518,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
 
     // Most output arguments sizes arent known until after the routine is completed, create MatLab arrays after routine has finished.
+
 
 
     int noRe1Dim[] = {1, Di1Dim[1], 1};
@@ -532,6 +544,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
 
 
+
     delete [] h;
     delete [] Di1;
     delete [] Di2;
@@ -539,7 +552,9 @@ void mexFunction(int nlhs, mxArray *plhs[],
     delete [] beta;
     delete [] c;
     delete [] q;
+
 	delete [] noRe1;
+
 
 
 
@@ -555,7 +570,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
     delete [] betaDim;
     delete [] cDim;
     delete [] qDim;
-   // delete [] noRe1Dim;
+
+
 
 }
 

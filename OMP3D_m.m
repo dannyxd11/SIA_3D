@@ -120,6 +120,18 @@ for k=1:H
 %!!!modification of 1D OMP
   new_atom2=kron(Dy(:,q(2)),Dx(:,q(1)));
   new_atom=kron(Dz(:,q(3)),new_atom2);
+<<<<<<< HEAD
+   %Q(:,k) is the orthogonalization of newatom  w.r.t Q(:,1),..., Q(:,k-1) 
+  [Q]=Orthogonalize(Q,new_atom);
+   %re-orthogonalization of Q(:,k)  w.r.t Q(:,1),..., Q(:,k-1) 
+  [Q]=Reorthogonalize(Q,zmax);
+  end
+%!
+   if k==1 Q(:,k)=kron(Dz(:,q(3)),kron(Dy(:,q(2)),Dx(:,q(1)))); end
+%
+  nork=norm(Q(:,k)); 
+  Q(:,k)=Q(:,k)/nork; %normalizationa
+=======
  % new_atom2=kronecker(Dy(:,q(2)),Dx(:,q(1)));
  % new_atom=kronecker(Dz(:,q(3)),new_atom2);
   
@@ -138,11 +150,16 @@ for k=1:H
   nork=norm(Q(:,k)); 
   Q(:,k)=Q(:,k)/nork; %normalizationa
   
+>>>>>>> 35be459b458d5a6bb388b0d6b851d1f1e8dadd9e
 %
   % compute biorthogonal functions beta from 1 to k-1
 %
   if k>1
+<<<<<<< HEAD
+  [beta]=Biorthogonalize(beta,Q(:,k),new_atom,nork);
+=======
   [w]=Biorthogonalize(beta,Q(:,k),new_atom,nork);
+>>>>>>> 35be459b458d5a6bb388b0d6b851d1f1e8dadd9e
   end	
   beta(:,k)=Q(:,k)/nork; % kth biorthogonal function
 %

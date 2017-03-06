@@ -6,6 +6,14 @@
 #include <cmath>
 #include "commonOps.cpp"
 #include "IP3D.cpp"
+//
+// Created by Dan on 26/01/2017.
+//
+
+#include <cmath>
+#include "commonOps.cpp"
+#include "IP3D.cpp"
+#include <unistd.h> //Delete after
 
 
 void changeDimensions(double *matrix, int *curDimensions, int height, int width, int depth) {
@@ -23,13 +31,14 @@ int validateIndex(double indk, double *Di, int *DiDim) {
             return i;
         }
     }
-    mexErrMsgTxt("Index not in dictionary");
+    //mexErrMsgTxt("Index not in dictionary");
+    std::cout << "Index not in dictionary" << std::endl;
     return 0;
 }
 
 int ismember(double* matrix, int size, double member){
     for (int i = 0; i < size; i++) {
-        if (Di[i] == indk) {
+        if (matrix[i] == member) {
             return 1;
         }
     }
@@ -67,6 +76,7 @@ int numel(int *dimensions) {
 }
 
 double vectorNorm(double *matrix, int size) {
+    usleep(1000000);
     double sum = 0;
     for (int n = 0; n < size; n++) {
         sum += matrix[n] * matrix[n];
@@ -76,17 +86,17 @@ double vectorNorm(double *matrix, int size) {
 
 void ind2sub(int *dimensions, int index, int *q) {
     int plane = dimensions[0] * dimensions[1];
-    q[0] = index / plane;
+    q[2] = index / plane;
     int rem = index % plane;
     q[1] = rem / dimensions[0];
-    q[2] = rem % dimensions[1];
+    q[0] = rem % dimensions[1];
 }
 
 //void OMP3D(double* f, int* fDim, double* dx, int* dxDim, double* dy, int* dyDim, double* dz, int* dzDim, double tol, int No){
 
 void
 OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, double *dz, int *dzDim, double tol, int No,
-      double *h, int *hDim, double *Di1, int *Di1Dim, double *Di2, int *Di2Dim, double *Di3, int *Di3Dim, double *beta,
+      double *H, int *HDim, double *Di1, int *Di1Dim, double *Di2, int *Di2Dim, double *Di3, int *Di3Dim, double *beta,
       int *betaDim,
       double *c, int *cDim, double *Q, int *QDim, double *noRe1) {
 
@@ -109,7 +119,7 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
     N=Nx*Ny*Nz;
     */
 
-    int delta = 1 / (lx * ly * lz);
+    double delta = 1.0 / (lx * ly * lz);
     int N = nx * ny * nz;
 
     /*
@@ -197,22 +207,27 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
     /*
     min(No,N);
     */
-    int H = No < N ? No : N; // maximal number of function in sub-dictionary
-    H = N; // temp
+    int lim = No < N ? No : N; // maximal number of function in sub-dictionary
+    lim = N; // temp
     //double* Q = new double[dxDim[0] * dyDim[0] * dzDim[0]];
     //double* nore1 = new double[H];
     //double* Di1 = new double[H];
     //double* Di2 = new double[H];
     //double* Di3 = new double[H];
+    double *cc = new double[nx * ny * nz]();
+    int ccDim[] = {dxDim[1], dyDim[1], dzDim[1]};
+    double* h = new double[fDim[0] * fDim[1] * fDim[2]];
+    int hDim[] = {reDim[0], reDim[1], reDim[2]};
 
-    for (int k = 0; k < H; k++) {
+    int *q = new int[3];
 
-        double *cc = new double[nx * ny]();
-        int *ccDim = new int[3];
-        setDimensions(dxDim[1], dyDim[1], dzDim[1], ccDim);
+
+    for (int k = 0; k < lim; k++) {
+
+
 
         //int* QDim = new int[3];
-        int *q = new int[3];
+
         if (k < numind) {
 
             int qx = validateIndex(indx[k], Dix, DixDim);
@@ -224,14 +239,21 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
         } else {
 
             IP3d(re, reDim, dx, dxDim, dy, dyDim, dz, dzDim, cc, ccDim);
+            //std::cout << ccDim[0] << "," << ccDim[1] << "," << ccDim[2] << std::endl;
+//            for(int i = 0; i < ccDim[0] * ccDim[1] * ccDim[2]; i++){
+//                std::cout << cc[i] << ", ";
+//            }
+//            std::cout << std::endl;
+
+
             int maxind = max(cc, ccDim);
             ind2sub(ccDim, maxind, q);
-			ccDim[0];
-			ccDim[1];
-			ccDim[2];
-            if (cc[maxind] < tol2) {
-                k = k - 1;
-                mexPrintf("OMP3D stopped, max(|<f,q|/||q||) <= tol2 = %g\n", tol2);
+            std::cout << cc[maxind] << std::endl;
+            if (abs(cc[maxind]) < tol2) {
+                //k = k - 1;
+
+                //mexPrintf("OMP3D stopped, max(|<f,q|/||q||) <= tol2 = %g\n", tol2);
+                std::cout << "OMP3D stopped, max(|<f,q|/||q||) <= tol2\n" << std::endl;
                 break;
             }
         }
@@ -239,22 +261,29 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
         double *new_atom2 = new double[dyDim[0] * dxDim[0]]; // Only height since its 'Kronecking'  columns
         int *new_atom2Dim = new int[3];
 
-        double *new_atom = new double[dzDim[0] * new_atom2Dim[0]];
+        double *new_atom = new double[dzDim[0] * dyDim[0] * dxDim[0]];
         int *new_atomDim = new int[3];
 
         Di1[k] = q[0];
         Di2[k] = q[1];
         Di3[k] = q[2];
-        if (k > 0) {
-            double *new_atom2 = new double[dyDim[0] * dxDim[0]]; // Only height since its 'Kronecking'  columns
-            int *new_atom2Dim = new int[3];
 
-            int *tempDxColDim = new int[3];
-            setDimensions(dxDim[0], 1, 1, tempDxColDim);
-            int *tempDyColDim = new int[3];
-            setDimensions(dyDim[0], 1, 1, tempDyColDim);
-            int *tempDzColDim = new int[3];
-            setDimensions(dyDim[0], 1, 1, tempDzColDim);
+        Di1Dim[1] = k + 1;
+        Di2Dim[1] = k + 1;
+        Di3Dim[1] = k + 1;
+
+
+
+        int *tempDxColDim = new int[3];
+        setDimensions(dxDim[0], 1, 1, tempDxColDim);
+        int *tempDyColDim = new int[3];
+        setDimensions(dyDim[0], 1, 1, tempDyColDim);
+        int *tempDzColDim = new int[3];
+        setDimensions(dzDim[0], 1, 1, tempDzColDim);
+
+        if (k > 0) {
+            //double *new_atom2 = new double[dyDim[0] * dxDim[0]]; // Only height since its 'Kronecking'  columns
+            //int *new_atom2Dim = new int[3];
 
             kroneckerProduct(getCol(dy, dyDim, q[1]), tempDyColDim, getCol(dx, dxDim, q[0]), tempDxColDim, new_atom2,
                              new_atom2Dim);
@@ -269,38 +298,17 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
             orthogonalize(Q, QDim, new_atom, new_atomDim); // Need to sort out resizing
             reorthogonalize(Q, QDim, zmax);
 
-            delete[] new_atom2;
-            delete[] new_atom2Dim;
-            delete[] tempDxColDim;
-            delete[] tempDyColDim;
-            delete[] tempDzColDim;
-            delete[] new_atom;
-            delete[] new_atomDim;
+
         }
 
         if (k == 0) {
 
-
-            int *tempDxColDim = new int[3];
-            setDimensions(dxDim[0], 1, 1, tempDxColDim);
-            int *tempDyColDim = new int[3];
-            setDimensions(dyDim[0], 1, 1, tempDyColDim);
-            int *tempDzColDim = new int[3];
-            setDimensions(dyDim[0], 1, 1, tempDzColDim);
-
             kroneckerProduct(getCol(dy, dyDim, q[1]), tempDyColDim, getCol(dx, dxDim, q[0]), tempDxColDim, new_atom2,
                              new_atom2Dim);
 
-            double *new_atom = new double[dzDim[0] * dyDim[0] * dyDim[0]];
-            int *new_atomDim = new int[3];
-
             kroneckerProduct(getCol(dz, dzDim, q[2]), tempDzColDim, new_atom2, new_atom2Dim, new_atom, new_atomDim);
-            memcpy(&Q, &new_atom, new_atomDim[0]);
+            memcpy(&Q[0], &new_atom[0], new_atomDim[0] * sizeof(double));
         }
-		mexPrintf("%f,1\n",QDim[0]);
-		QDim[1];
-		QDim[2];
-
 
         double nork = vectorNorm(getCol(Q, QDim, k), QDim[0]); // nork=norm(Q(:,k));
         for (int n = 0; n < QDim[0]; n++) { // Q(:,k) = Q(:,k) / nork;
@@ -311,16 +319,23 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
             int *tempColDim = new int[3];
             setDimensions(QDim[0], 1, 1, tempColDim);
             biorthogonalize(beta, betaDim, getCol(Q, QDim, k), tempColDim, new_atom, new_atomDim, nork);
+            delete [] tempColDim;
         }
-
 
         /*
         beta(:,k) =Q(:,k) / nork; // kth biorthogonal function
         */
+        betaDim[1] = QDim[1];
+        std::cout << betaDim[0] << "," << betaDim[1] << "," << betaDim[2] << std::endl;
+
+        std::cout << std::endl;
         memcpy(getCol(beta, betaDim, k), getCol(Q, QDim, k), QDim[0] * sizeof(double));
         for (int i = 0; i < betaDim[0]; i++) {
             beta[i + k * betaDim[0]] /= nork;
         }
+
+
+
 
         /*
         h  = f(:)' * Q(:,k) * Q(:,k)' ;
@@ -339,12 +354,9 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
         int *multresultDim = new int[3];
         setDimensions(QDim[0], QDim[0], QDim[0], multresultDim);
 
-        double *h = new double[fDim[0] * fDim[1] * fDim[2]];
-        int *hDim = new int[3];
+
         blasMultiply(getCol(Q, QDim, k), tempQkDim, getCol(Q, QDim, k), tempQkRowDim, multresult, multresultDim);
         blasMultiply(f, tempFVectorDim, multresult, multresultDim, h, hDim);
-
-
 
         /*
         re = re(:)-h';
@@ -361,7 +373,8 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
         */
 
         noRe1[k] = pow(vectorNorm(re, numel(hDim)), 2) * delta;
-
+        std::cout << vectorNorm(re, numel(hDim)) << std::endl;
+        std::cout << delta << std::endl;
         /*
         re = reshape(re,Lx,Ly,Lz);
         */
@@ -370,10 +383,24 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
         reDim[1] = ly;
         reDim[2] = lz;
 
+        delete [] tempFVectorDim;
+        delete [] tempQkDim;
+        delete [] tempQkRowDim;
+        delete [] multresult;
+        delete [] multresultDim;
+        delete[] new_atom2;
+        delete[] new_atom2Dim;
+        delete[] tempDxColDim;
+        delete[] tempDyColDim;
+        delete[] tempDzColDim;
+        delete[] new_atom;
+        delete[] new_atomDim;
+
         if (tol != 0 && (noRe1[k] < tol)) {
+
+            std::cout << k << "," << noRe1[k] << "," << tol <<"BREAKING!!!!" << std::endl;
             break;
         }
-
 
     }
 
@@ -381,21 +408,18 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
     c=f(:)'*beta;
     */
 
-    int *tempFrowDim = new int[3];
-    setDimensions(1, fDim[0] * fDim[1] * fDim[2], 1, tempFrowDim);
+    int *tempRowDim = new int[3];
+    setDimensions(1, fDim[0] * fDim[1] * fDim[2], 1, tempRowDim);
+    std::cout << "betaDim " << betaDim[1] << std::endl;
+    setDimensions(1, betaDim[1], 1, cDim);
 
-    double *cMultResult = new double[1];
-    int *cMultResultDim = new int[3];
-    setDimensions(1, 1, 1, cMultResultDim);
-
-    blasMultiply(f, tempFrowDim, beta, betaDim, cMultResult, cMultResultDim);
-    c = cMultResult;
+    blasMultiply(f, tempRowDim, beta, betaDim, c, cDim);
 
     /*
     H=reshape(H1,Lx,Ly,Lz);
     */
 
-    memcpy(h, H1, lx * ly * lz * sizeof(double));
+    memcpy(H, H1, lx * ly * lz * sizeof(double));
 
 
     delete [] Dix;
@@ -404,14 +428,28 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
     delete [] DixDim;
     delete [] DiyDim;
     delete [] DizDim;
+    delete [] tempRowDim;
+    delete [] H1;
+    delete [] H1Dim;
+    delete [] q;
 
-    delete [] tempFrowFim;
-    delete [] cMultResult;
-    delete [] cMultResultDim;
+    //  delete [] tempRowDim;
+    //  delete [] cMultResult;
+    //  delete [] cMultResultDim;
 
+    delete [] cc;
+    delete [] re;
+    delete [] reDim;
+    delete [] h;
 
-
+    // indx/y/z not supported
+    delete [] indx;
+    delete [] indy;
+    delete [] indz;
 }
+
+
+
 
 
 void mexFunction(int nlhs, mxArray *plhs[],
@@ -456,19 +494,39 @@ void mexFunction(int nlhs, mxArray *plhs[],
     setDimensions(1, dxDim[1] * dyDim[1] * dzDim[1], 1, Di1Dim);
     setDimensions(1, dxDim[1] * dyDim[1] * dzDim[1], 1, Di2Dim);
     setDimensions(1, dxDim[1] * dyDim[1] * dzDim[1], 1, Di3Dim);
-    setDimensions(dxDim[0], 1, 1, betaDim);
-    setDimensions(1, 1, 1, cDim);
-    setDimensions(1, 1, 1, qDim);
+    setDimensions(dxDim[0] * dyDim[0] * dzDim[0], 1, 1, betaDim);
+    setDimensions(dxDim[0], dxDim[0], dxDim[0], cDim);
+    setDimensions(dxDim[0] * dyDim[0] * dzDim[0], 1, 1, qDim); // gets changed by multiply at end of routine
     setDimensions(1, 1, 1, noRe1Dim);
 
     int HNdim = 3, HDims[3] = {hDim[0], hDim[1], hDim[2]};
-    int Di1Ndim = 3, Di1Dims[3] = {Di1Dim[0], Di1Dim[1], Di1Dim[2]};
-    int Di2Ndim = 3, Di2Dims[3] = {Di2Dim[0], Di2Dim[1], Di2Dim[2]};
-    int Di3Ndim = 3, Di3Dims[3] = {Di3Dim[0], Di3Dim[1], Di3Dim[2]};
+    int Di1Ndim = 3, Di1Dims[3] = {1, 1, 1};
+    int Di2Ndim = 3, Di2Dims[3] = {1, 1, 1};
+    int Di3Ndim = 3, Di3Dims[3] = {1, 1, 1};
     int betaNdim = 3, betaDims[3] = {betaDim[0], betaDim[1], betaDim[2]};
     int cNdim = 3, cDims[3] = {cDim[0], cDim[1], cDim[2]};
     int qNdim = 3, qDims[3] = {qDim[0], qDim[1], qDim[2]};
-    int noRe1NDim = 3, noRe1Dims[3] = {noRe1Dim[0], noRe1Dim[1], noRe1Dim[2]};
+    int noRe1NDim = 3;
+
+
+    double *h = new double(hDim[0] * hDim[1] * hDim[2]);
+    double *Di1 = new double(dxDim[1] * dyDim[1] * dzDim[1]);
+    double *Di2 = new double(dxDim[1] * dyDim[1] * dzDim[1]);
+    double *Di3 = new double(dxDim[1] * dyDim[1] * dzDim[1]);
+    double *beta = new double[dxDim[1] * dyDim[1] * dzDim[1]]();
+    double *c = new double[dxDim[0] * dyDim[0] * dzDim[0]];
+    double *q = new double[dxDim[1] * dyDim[1] * dzDim[1]];
+    double* noRe1 = new double[dxDim[1] * dyDim[1] * dzDim[1]];
+
+
+
+    nlhs = 8;
+
+    OMP3D(f, fDim, dx, dxDim, dy, dyDim, dz, dzDim, tol, No,
+          h, hDim, Di1, Di1Dim, Di2, Di2Dim, Di3, Di3Dim, beta, betaDim, c, cDim, q, qDim, noRe1);
+
+
+    // Most output arguments sizes arent known until after the routine is completed, create MatLab arrays after routine has finished.
 
     plhs[0] = mxCreateNumericArray(HNdim, HDims, mxDOUBLE_CLASS, mxREAL);
     plhs[1] = mxCreateNumericArray(Di1Ndim, Di1Dims, mxDOUBLE_CLASS, mxREAL);
@@ -477,21 +535,30 @@ void mexFunction(int nlhs, mxArray *plhs[],
     plhs[4] = mxCreateNumericArray(betaNdim, betaDims, mxDOUBLE_CLASS, mxREAL);
     plhs[5] = mxCreateNumericArray(cNdim, cDims, mxDOUBLE_CLASS, mxREAL);
     plhs[6] = mxCreateNumericArray(qNdim, qDims, mxDOUBLE_CLASS, mxREAL);
-    plhs[7] = mxCreateNumericArray(noRe1NDim, noRe1Dims, mxDOUBLE_CLASS, mxREAL);
+    plhs[7] = mxCreateNumericArray(noRe1NDim, {1, Di1Dim[1], 1}, mxDOUBLE_CLASS, mxREAL);
 
-    double *h = mxGetPr(plhs[0]);
-    double *Di1 = mxGetPr(plhs[1]);
-    double *Di2 = mxGetPr(plhs[2]);
-    double *Di3 = mxGetPr(plhs[3]);
-    double *beta = mxGetPr(plhs[4]);
-    double *c = mxGetPr(plhs[5]);
-    double *q = mxGetPr(plhs[6]);
-    double *noRe1 = mxGetPr(plhs[7]);
+    memcpy(mxGetPr(plhs[0]), h, sizeof(double) * hDims[0] * hDims[1] * hDims[2]);
+    memcpy(mxGetPr(plhs[1]), Di1, sizeof(double) * Di1Dims[0] * Di1Dims[1] * Di1Dims[2]);
+    memcpy(mxGetPr(plhs[2]), Di2, sizeof(double) * Di2Dims[0] * Di2Dims[1] * Di2Dims[2]);
+    memcpy(mxGetPr(plhs[3]), Di3, sizeof(double) * Di3Dims[0] * Di3Dims[1] * Di3Dims[2]);
+    memcpy(mxGetPr(plhs[4]), beta, sizeof(double) * betaDims[0] * betaDims[1] * betaDims[2]);
+    memcpy(mxGetPr(plhs[5]), c, sizeof(double) * cDims[0] * cDims[1] * cDims[2]);
+    memcpy(mxGetPr(plhs[6]), q, sizeof(double) * qDims[0] * qDims[1] * qDims[2]);
+    memcpy(mxGetPr(plhs[7]), noRe1, sizeof(double) * numat); //todo Define numat
 
-    nlhs = 8;
 
-    OMP3D(f, fDim, dx, dxDim, dy, dyDim, dz, dzDim, tol, No,
-          h, hDim, Di1, Di1Dim, Di2, Di2Dim, Di3, Di3Dim, beta, betaDim, c, cDim, q, qDim, noRe1);
+
+
+    delete [] h;
+    delete [] Di1;
+    delete [] Di2;
+    delete [] Di3;
+    delete [] beta;
+    delete [] c;
+    delete [] q;
+
+
+
 
     delete [] fDim;
     delete [] dxDim;
