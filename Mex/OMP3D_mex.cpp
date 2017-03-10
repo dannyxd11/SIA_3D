@@ -187,7 +187,6 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
     int *indx = new int[0];
     int *indy = new int[0];
     int *indz = new int[0];
-    tol = 6.5;
 
     int numind = 0; // numel
 
