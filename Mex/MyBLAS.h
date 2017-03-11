@@ -97,7 +97,7 @@ void MatrixVectorBLAS(double *matrix, double *vector, double *returnVector,
 //     
 //}
 
-void MatrixMultiplyBLAS(double *m1, double *m2, double *mReturn, unsigned long m, unsigned long n, unsigned long k, char chn1, char chn2)
+void MatrixMultiplyBLAS(double *m1, double *m2, double *mReturn, unsigned long m, unsigned long n, unsigned long k, char chn1, char chn2, double alpha, double beta)
 {
     /* Remember n is the number of columns in the matrix so it wil be one more than the index in 
      * an array of the same size
@@ -137,9 +137,14 @@ void MatrixMultiplyBLAS(double *m1, double *m2, double *mReturn, unsigned long m
 
 	// The 1st dimension of the return matrix is the same as the 1st dimension of op(m1)
 	ptrdiff_t LDC = m_t;
-    double zero = 0, one = 1;
+    //double zero = 0, one = 1;
 
-    dgemm(&chn1,&chn2, &m_t, &n_t, &k_t, &one, m1, &LDA, m2, &LDB, &zero, mReturn, &LDC);
+    dgemm(&chn1,&chn2, &m_t, &n_t, &k_t, &alpha, m1, &LDA, m2, &LDB, &beta, mReturn, &LDC);
+}
+
+void MatrixMultiplyBLAS(double *m1, double *m2, double *mReturn, unsigned long m, unsigned long n, unsigned long k, char chn1, char chn2){
+    MatrixMultiplyBLAS(m1,m2,mReturn,m,n,k,chn1,chn2,1,0);
+    
 }
 
 double InnerProductBLAS(double *v1, double *v2,  unsigned long m, unsigned long incx = 1, unsigned long incy = 1)
