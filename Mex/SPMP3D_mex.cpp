@@ -220,8 +220,7 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
     int planeDim[] = {ReDim[0], ReDim[1], 1};
     double* multResult1 = new double[VxDim[0]];
     int multResult1Dim[] = {1, VxDim[0], 1};
-    double* multResult2 = new double[1];
-    int multResult2Dim[] = {1, 1, 1};
+
 
 
     /*
@@ -277,17 +276,9 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
 
                 set3DElement(cc, ccDim, q[0], q[1], q[2], 0) ;
                 for (int zk = 0; zk < Lz; zk++) {
-                    //    cc(q(1), q(2), q(3)) = cc(q(1), q(2), q(3)) + Vx(:,q(1))'*Re(:,:,zk)*Vy(:,q(2))*Vz(zk,q(3));
 
-                    transpose(getCol(Vx, VxDim, q[0]), ColDim, Row, RowDim);
-                    col = getCol(Vy, VyDim, q[1]);
-                    plane = getPlane(Re, ReDim, zk);
-
-                    blasMultiply(Row, RowDim, plane, planeDim, multResult1, multResult1Dim);
-                    blasMultiply(multResult1, multResult1Dim, col, ColDim, multResult2, multResult2Dim);
-
-                    double val = get3DElement(cc, ccDim, q[0], q[1], q[2]) + multResult2[0] * getElement(Vz, VzDim, q[2], zk);;
-                    set3DElement(cc, ccDim, q[0], q[1], q[2], val);
+                    MatrixMultiplyBLAS(getCol(Vx,VxDim,q[0]), getPlane(Re, ReDim, zk), multResult1, VxDim[0], 1, multResult1[1], 'T', 'N');
+                    MatrixMultiplyBLAS(multResult1, getCol(Vy, VyDim, q[1]), &cc[q[2] * ccDim[0] * ccDim[1] + q[1] * ccDim[0] + q[0]], multResult1Dim[0], multResult1Dim[1], 1, 'N', 'N', getElement(Vz, VzDim, q[2], zk), 1);
 
                 }
             } else {
@@ -325,7 +316,6 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
                      */
                     delete [] Row;
                     delete [] multResult1;
-                    delete [] multResult2;
 
                     delete [] cp;
                     delete [] cc;
@@ -574,7 +564,6 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
 
     delete [] Row;
     delete [] multResult1;
-    delete [] multResult2;
 
     delete [] cp;
     delete [] cc;
