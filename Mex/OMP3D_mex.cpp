@@ -330,26 +330,14 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
         h  = f(:)' * Q(:,k) * Q(:,k)' ;
         */
 
-        int *tempFVectorDim = new int[3];
-        setDimensions(1, fDim[0] * fDim[1] * fDim[2], 1, tempFVectorDim);
-
-        int *tempQkDim = new int[3];
-        setDimensions(QDim[0], 1, 1, tempQkDim);
-
-        int *tempQkRowDim = new int[3];
-        setDimensions(1, QDim[0], 1, tempQkRowDim);
 
         double *multresult = new double[QDim[0] * QDim[0]];
-        int *multresultDim = new int[3];
-
-        setDimensions(QDim[0], QDim[0], 1, multresultDim);
-		
+        int multresultDim[] = {QDim[0], QDim[0], 1};
 
 
-        blasMultiply(getCol(Q, QDim, k), tempQkDim, getCol(Q, QDim, k), tempQkRowDim, multresult, multresultDim);
-		setDimensions(1, multresultDim[1], 1, hDim);
-
-        blasMultiply(f, tempFVectorDim, multresult, multresultDim, h, hDim);
+        MatrixMultiplyBLAS(getCol(Q, QDim, k), getCol(Q, QDim, k), multresult, 1, QDim[0], QDim[0], 'T', 'N');
+        setDimensions(1, multresultDim[1], 1, hDim);
+        MatrixMultiplyBLAS(f, multresult, h, 1, fDim[0] * fDim[1] * fDim[2], multresultDim[1], 'N', 'N');
 
         /*
         re = re(:)-h';
@@ -375,18 +363,14 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
         reDim[1] = ly;
         reDim[2] = lz;
 
-        delete [] tempFVectorDim;
-        delete [] tempQkDim;
-        delete [] tempQkRowDim;
         delete [] multresult;
-        delete [] multresultDim;
-        delete[] new_atom2;
-        delete[] new_atom2Dim;
-        delete[] tempDxColDim;
-        delete[] tempDyColDim;
-        delete[] tempDzColDim;
-        delete[] new_atom;
-        delete[] new_atomDim;
+        delete [] new_atom2;
+        delete [] new_atom2Dim;
+        delete [] tempDxColDim;
+        delete [] tempDyColDim;
+        delete [] tempDzColDim;
+        delete [] new_atom;
+        delete [] new_atomDim;
 
         if (tol != 0 && (noRe1[k] < tol)) {
             break;
@@ -398,11 +382,8 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
     c=f(:)'*beta;
     */
 
-    int *tempRowDim = new int[3];
-    setDimensions(1, fDim[0] * fDim[1] * fDim[2], 1, tempRowDim);
     setDimensions(1, betaDim[1], 1, cDim);
-
-    blasMultiply(f, tempRowDim, beta, betaDim, c, cDim);
+    MatrixMultiplyBLAS(f, beta, c, 1, fDim[0] * fDim[1] * fDim[2], betaDim[1], 'N', 'N', 1, 0);
 
     /*
     H=reshape(H1,Lx,Ly,Lz);
@@ -417,15 +398,9 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
     delete [] DixDim;
     delete [] DiyDim;
     delete [] DizDim;
-    delete [] tempRowDim;
     delete [] H1;
     delete [] H1Dim;
     delete [] q;
-
-    //  delete [] tempRowDim;
-    //  delete [] cMultResult;
-    //  delete [] cMultResultDim;
-
     delete [] cc;
     delete [] re;
     delete [] reDim;
@@ -485,7 +460,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     setDimensions(1, dxDim[1] * dyDim[1] * dzDim[1], 1, Di3Dim);
     setDimensions(dxDim[0] * dyDim[0] * dzDim[0], 1, 1, betaDim);
     setDimensions(dxDim[0], dxDim[0], dxDim[0], cDim);
-    setDimensions(dxDim[0] * dyDim[0] * dzDim[0], 1, 1, qDim); // gets changed by multiply at end of routine
+    setDimensions(dxDim[0] * dyDim[0] * dzDim[0], 1, 1, qDim);
 
 
     int HNdim = 3;
