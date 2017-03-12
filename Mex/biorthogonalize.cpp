@@ -14,20 +14,14 @@
  *
  */
 
-
-
-
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
-    int* betaDim = new int[3];
-    setDimensions(mxGetDimensions(prhs[0])[0], mxGetDimensions(prhs[0])[1], 1, betaDim);
+    int betaDim[] = {mxGetDimensions(prhs[0])[0], mxGetDimensions(prhs[0])[1], 1};
+    int qkDim[] = {mxGetDimensions(prhs[1])[0], mxGetDimensions(prhs[1])[1], 1};
 
-    int* qkDim = new int[3];
-    setDimensions(mxGetDimensions(prhs[1])[0], mxGetDimensions(prhs[1])[1], 1, qkDim);
     double* qk = mxGetPr(prhs[1]);
 
-    int* newAtomDim = new int[3];
-    setDimensions(mxGetDimensions(prhs[2])[0], mxGetDimensions(prhs[2])[1], 1, newAtomDim);
+    int newAtomDim[] = {mxGetDimensions(prhs[2])[0], mxGetDimensions(prhs[2])[1], 1};
     double* newAtom = mxGetPr(prhs[2]);
 
     double nork = mxGetPr(prhs[3])[0];
@@ -38,9 +32,4 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     double* beta = mxGetPr(plhs[0]);
     biorthogonalize(beta, betaDim, qk, qkDim, newAtom, newAtomDim, nork);
 
-    delete [] betaDim;
-    delete [] qkDim;
-    delete [] newAtomDim;
-
 }
-
