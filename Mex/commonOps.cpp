@@ -135,44 +135,25 @@ int* getCol(int* matrix, int* matrixDim, int col){
 
 void reorthogonalize(double* Q, int* QDim, int zmax){
 
-    // k=size(Q,2);
+
     int k = QDim[1];
 
-    //
     for(int z = 0; z < zmax; z++){
+
         double multResult1 = 0;
-        int* multResult1Dim = new int[3];
-        setDimensions(1,1,1, multResult1Dim);
+        int multResult1Dim[] = {1,1,1};
 
         for(int p = 0; p < k - 1; p++){
-
-
-            double* qpTranspose = new double[QDim[0]];
-            int* qpTransDim = new int[3];
-            setDimensions(QDim[0], 1, 1, qpTransDim);
-//
             double* qp = getCol(Q,QDim,p);
-            int* qpDim = new int[3];
-            setDimensions(QDim[0], 1, 1, qpDim);
-//
             double* qk = getCol(Q, QDim, k-1);
-            int* qkDim = new int[3];
-            setDimensions(QDim[0], 1, 1, qkDim);
 
-            transpose(qp, qpDim, qpTranspose, qpTransDim);
-            blasMultiply(qpTranspose, qpTransDim, qk, qkDim, &multResult1, multResult1Dim);
+            MatrixMultiplyBLAS(getCol(Q,QDim,p), getCol(Q, QDim, k-1), &multResult1, QDim[0], 1, 1, 'T', 'N', 1, 0);
+
 
             for (int n = 0; n < QDim[0]; n++){
                 setElement(Q, QDim, k-1, n, qk[n] - (multResult1 * qp[n]));
             }
-
-            delete [] qpTranspose;
-            delete [] qpTransDim;
-            delete [] qpDim;
-            delete [] qkDim;
         }
-
-        delete [] multResult1Dim;
     }
 }
 
@@ -182,30 +163,12 @@ void biorthogonalize(double* beta, int* betaDim, double* qk, int* qkDim, double*
     // Width of second, height of first
 
     double* multResult = new double[betaDim[1] * newAtomDim[0]];
-    int* multResultDim = new int[3];
-    setDimensions(newAtomDim[1],betaDim[1],1, multResultDim);
+    int multResultDim[] = {newAtomDim[1],betaDim[1],1};
 
-    double* finalResult = new double[multResultDim[1]*qkDim[0]];
-    int* finalResultDim = new int[3];
-    setDimensions(qkDim[0], multResultDim[1], 1, finalResultDim);
-
-    double* transposed = new double[newAtomDim[0] * newAtomDim[1]];
-    int* transposedDim = new int[3];
-    transpose(newAtom, newAtomDim, transposed, transposedDim);
-
-    blasMultiply(transposed, transposedDim, beta, betaDim, multResult, multResultDim);
-    blasMultiply(qk, qkDim, multResult, multResultDim, finalResult, finalResultDim);
-
-    for (int n = 0; n < betaDim[0] * betaDim[1]; n++){
-        beta[n] -= finalResult[n] / nork;
-    }
+    MatrixMultiplyBLAS(newAtom, beta, multResult, newAtomDim[0], newAtomDim[1], betaDim[1], 'T', 'N', 1, 0);
+    MatrixMultiplyBLAS(qk, multResult, beta, qkDim[0], qkDim[1], multResultDim[1], 'N', 'N', -1/nork, 1);
 
     delete [] multResult;
-    delete [] multResultDim;
-    delete [] finalResult;
-    delete [] finalResultDim;
-    delete [] transposed;
-    delete [] transposedDim;
 }
 
 
@@ -232,58 +195,29 @@ void kroneckerProduct(double* leftMatrix, int* leftMatrixDim, double* rightMatri
 
 }
 
-
-
 void orthogonalize(double* Q, int* QDim, double* newAtom, int* newAtomDim){
-
-    // Set K as width + 1 (Size is increasing)
+// Set K as width + 1 (Size is increasing)
     int k = QDim[1] + 1;
     int* origDim = new int[3];
+
     setDimensions(QDim, origDim);
     QDim[1] += 1;
 
-
     double multResult1 = 0;
-    int* multResult1Dim = new int[3];
-    setDimensions(1,1,1, multResult1Dim);
-
-
+    int multResult1Dim[] = {1,1,1};
 
     for(int p = 0; p < k - 1; p++){
-        int* tempColDim = new int[3];
-        setDimensions(QDim[0], 1, 1,tempColDim);
-
-        double* tempCol; // = new double[tempColDim[0]];
-        tempCol = getCol(Q, origDim, p);
-
-
-        double* colT = new double[tempColDim[0] * tempColDim[1]];
-        int* colTDim = new int[3];
-        setDimensions(1, QDim[1], 1, colTDim);
-        transpose(tempCol, tempColDim, colT, colTDim);
-
-        blasMultiply(colT, colTDim, newAtom, newAtomDim, &multResult1, multResult1Dim);
+        MatrixMultiplyBLAS(getCol(Q, origDim, p), newAtom, &multResult1, origDim[0], 1, 1, 'T', 'N', 1, 0);
 
         double* col = getCol(Q, QDim, p);
 
-
         for (int n = 0; n < QDim[0]; n++){
-            setElement(Q, QDim, k-1, n, newAtom[n] - (multResult1 * col[n]));
+            setElement(Q, QDim, k-1, n, newAtom[n] - (multResult1) * col[n]);
         }
 
-        delete [] colT;
-        delete [] colTDim;
-        delete [] tempColDim;
-        //delete [] tempCol;
     }
 
     delete [] origDim;
-    delete [] multResult1Dim;
-
 }
 
-
 #endif
-
-
-

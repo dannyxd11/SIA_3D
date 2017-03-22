@@ -1,10 +1,10 @@
 #ifndef PROJMP3D
 #define PROJMP3D
 
-#include "commonOps.cpp"
-#include "IPSP3D.cpp"	
-#include "hnew3D.cpp"
 #include "mex.h"
+#include "commonOps.cpp"
+#include "IPSP3D.cpp"
+#include "hnew3D.cpp"
 #include <cmath>
 
 using namespace std;
@@ -14,27 +14,19 @@ void ProjMP3d(double* h, double* re, int* reDim, double* v1, int* v1Dim, double*
 double delta 	= 	1 / (double)(v1Dim[0] * v2Dim[0] * v3Dim[0]);
 double tol2		=	1e-11;
 
-int* hnewDim = new int[3];
-setDimensions(v1Dim[0], v2Dim[0], v3Dim[0], hnewDim);
-double* hnew = new double[hnewDim[0] * hnewDim[1] * hnewDim[2]];	
+int hnewDim[] = {v1Dim[0], v2Dim[0], v3Dim[0]};
+double* hnew = new double[hnewDim[0] * hnewDim[1] * hnewDim[2]]();
 
-int* v1ColDim = new int[3];
-int* v2ColDim = new int[3]; 
-int* v3ColDim = new int[3];
-setDimensions(v1Dim[0], 1, 1, v1ColDim);
-setDimensions(v2Dim[0], 1, 1, v2ColDim);
-setDimensions(v3Dim[0], 1, 1, v3ColDim);
+int v1ColDim[] = {v1Dim[0], 1, 1};
+int v2ColDim[] = {v2Dim[0], 1, 1};
+int v3ColDim[] = {v3Dim[0], 1, 1};
 
-int* ccDim = new int[3];
-setDimensions(1, v1Dim[1], 1, ccDim);
-
-
+int ccDim[] = {1, v1Dim[1], 1};
+double* cc = new double[ccDim[0] * ccDim[1]]();
 
 for(int it = 0; it < max; it++){
-    double* cc = new double[ccDim[0] * ccDim[1]]();
+
 	IPSP3d(re, reDim, v1, v1Dim, v2, v2Dim, v3, v3Dim, cc, ccDim);
-
-
 
 	double maxValue = std::abs(cc[0]);
 	int n1 = 0;
@@ -49,7 +41,7 @@ for(int it = 0; it < max; it++){
 
 	hnew3d(&cc[n1], ccDim, getCol(v1, v1Dim, n1), v1ColDim, getCol(v2, v2Dim, n1), v2ColDim, getCol(v3, v3Dim, n1), v3ColDim,  hnew, hnewDim);
 	c[n1] += cc[n1];
-    delete [] cc;
+
 	double nornu = 0;
 
 	for(int k = 0; k < reDim[0] * reDim[1] * reDim[2]; k++){
@@ -62,13 +54,8 @@ for(int it = 0; it < max; it++){
 
 }
 
-
-delete [] ccDim;
-delete [] hnewDim;
+delete [] cc;
 delete [] hnew;
-delete [] v1ColDim;
-delete [] v2ColDim;
-delete [] v3ColDim;
 }
 
 #endif
