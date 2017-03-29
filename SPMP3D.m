@@ -103,9 +103,9 @@ for it=1:Maxit2;
 %       end
 %       end
 % %inner product of Residue and all the dictionary atoms
-       [cc]=IP3D(Re,Vx,Vy,Vz);
+       [cc]=IP3D(Re,Vx,Vy,Vz);       
 %=====================================================
-       [max_c,maxind]=max(abs(cc(:))); %chose max index of long vector
+       [max_c,maxind]=max(abs(cc(:))); %chose max index of long vector       
        [q(1),q(2),q(3)]=ind2sub(size(cc),maxind);%reshape to long vector to get the 3D index    
 %
          if max_c < tol2 %fprintf('%s stopped, max(|<f,D>|)<= tol2=%g.\n',name,tol2); 
