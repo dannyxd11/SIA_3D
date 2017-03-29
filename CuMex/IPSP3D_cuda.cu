@@ -181,7 +181,7 @@ __device__ void matrixMultiplyCuda(h_Matrix* a, h_Matrix* b, h_Matrix* c, cublas
 	}
 
 	int leadingDimensionA = a->height;
-	int leadingDimensionB = b->height;
+	int leadingDimensionB__global__ = b->height;
 	int leadingDimensionC = a->height;
 
 	double* beta = new double[1]();
@@ -265,15 +265,37 @@ __device__ int makeCopyOfMatrixElements(h_Matrix* destMatrix, h_Matrix* srcMatri
 	if(destMatrix->numel() != srcMatrix->numel() || destMatrix->height != srcMatrix->height || destMatrix->width != srcMatrix->width){
 		return -1;
 	}
-	for(int i = (srcMatrix->numel() % (BLOCK_WIDTH*BLOCK_WIDTH) == 0)? 0 : -1 ; i < srcMatrix->numel() / (BLOCK_WIDTH*BLOCK_WIDTH); i++){
-		int index = i * (threadIdx.x * destMatrix->height + threadIdx.y);
+	for(int i = 0 ; i < (srcMatrix->numel() / (BLOCK_WIDTH*BLOCK_WIDTH)) + ((srcMatrix->numel() % (BLOCK_WIDTH*BLOCK_WIDTH) == 0) ? 0 : +1); i++){
+		int index = i * (BLOCK_WIDTH * BLOCK_WIDTH) + (threadIdx.x * srcMatrix->height + threadIdx.y);
 		destMatrix->elements[index] = srcMatrix->elements[index];
 	}
 	return 0;
 }
 
-__device__ void d_IPSP3d(h_Matrix* re, h_Matrix* v1, h_Matrix* v2, h_Matrix* v3, h_Matrix* cc){
+__device__ int transpose(h_Matrix* destMatrix, h_Matrix* srcMatrix){
+	if(destMatrix->numel() != srcMatrix->numel() || destMatrix->height != srcMatrix->width || destMatrix->width != srcMatrix->height){
+		return -1;
+	}
+	destMatrix->height = srcMatrix->width;
+	destMatrix->width = srcMatrix->height;
+	__syncthreads();
+	for(int i = 0 ; i < srcMatrix->width / (BLOCK_WIDTH) + ((srcMatrix->width % (BLOCK_WIDTH) == 0) ? 0 : +1); i++){
+		for(int j = 0 ; j < srcMatrix->height / (BLOCK_WIDTH) + ((srcMatrix->height % (BLOCK_WIDTH) == 0) ? 0 : +1); j++){
+				printf("%d, %d, %d, %d\n", threadIdx.x + i ,threadIdx.y + j, srcMatrix->width / (BLOCK_WIDTH) + ((srcMatrix->width % (BLOCK_WIDTH) == 0) ? 0 : +1), srcMatrix->height / (BLOCK_WIDTH) + ((srcMatrix->height % (BLOCK_WIDTH) == 0) ? 0 : +1));
+				if(threadIdx.x + i * BLOCK_WIDTH < srcMatrix->width && threadIdx.y + j * BLOCK_WIDTH < srcMatrix->height){
+					destMatrix->setElement(threadIdx.y + j * BLOCK_WIDTH,threadIdx.x + i * BLOCK_WIDTH,srcMatrix->getElement(threadIdx.x + i * BLOCK_WIDTH,threadIdx.y + j * BLOCK_WIDTH)[0]);
+				}
+		}
+	}
+	return 0;
+}
 
+__global__ void d_transposeKernel(h_Matrix* destMatrix, h_Matrix* srcMatrix ){
+	transpose(destMatrix, srcMatrix);
+}
+
+__device__ void d_IPSP3d(h_Matrix* re, h_Matrix* v1, h_Matrix* v2, h_Matrix* v3, h_Matrix* cc){
+	double zero = 0;
 	double scalar = 1;
 	__shared__ int n1, l3;
 	__shared__ h_Matrix aMatrix;
@@ -283,22 +305,19 @@ __device__ void d_IPSP3d(h_Matrix* re, h_Matrix* v1, h_Matrix* v2, h_Matrix* v3,
 		n1 = v1->width;
 		l3 = v3->height;
 		aMatrixElements = new double[re->width]();
-		aMatrix.elements = aMatrixElements;__syncthreads();
-
-		aMatrix.width = 8; aMatrix.height = aMatrix.depth = 1;
+		aMatrix.elements = aMatrixElements;
+		aMatrix.width = v1->height; aMatrix.height = aMatrix.depth = 1;
 	}
 	__syncthreads();
 
 	for(int i = 0; i < n1; i++){
-		cc->setElement(i, 0.0);
 		for(int j = 0; j < l3; j++){
 			h_Matrix v1Col = v1->getCol(i);
 			h_Matrix v2Col = v2->getCol(i);
-			matrixMultiplyCuda(&v1Col, &re->getPlane(j), &aMatrix, 1, re->width, v1->height, CUBLAS_OP_T, CUBLAS_OP_N, &scalar);
+			matrixMultiplyCuda(&v1Col, &re->getPlane(j), &aMatrix, 1, re->width, v1->height, CUBLAS_OP_T, CUBLAS_OP_N, &scalar, &zero);
 			__syncthreads();
 			matrixMultiplyCuda(&aMatrix, &v2Col, cc->getElement(i), 1, 1, aMatrix.width, CUBLAS_OP_N, CUBLAS_OP_N, v3->getElement(i, j), &scalar);
 			__syncthreads();
-			//if (threadIdx.x == 0){printf("i: %d, j: %d, V3 Val:%f, \n", i, j, v3->getElement(i,j)[0]);}
 		}
 	}
 	return;
@@ -328,8 +347,8 @@ __device__ void d_findMaxInd(h_Matrix* matrix, int* maxInd, double* maxVal){
 	int localMaxInd = 0;
 	double localMaxVal = 0;
 
-	__shared__ int* sharedMaxInd;
-	__shared__ double* sharedMaxVal;
+	__shared__ int sharedMaxInd[BLOCK_WIDTH * BLOCK_WIDTH];
+	__shared__ double sharedMaxVal[BLOCK_WIDTH * BLOCK_WIDTH];
 
 
 
@@ -337,18 +356,20 @@ __device__ void d_findMaxInd(h_Matrix* matrix, int* maxInd, double* maxVal){
 
 	for(int i = 0; i < elementsPerThread; i++){
 		int index = elementsPerThread * (threadIdx.y * BLOCK_WIDTH + threadIdx.x) + i;
+		//printf("%d, %d, %d, %d, %d %d,\n", index, elementsPerThread, threadIdx.y, threadIdx.x, i, numberOfElements);
 		if(index < numberOfElements){
+		//	printf("INSIDE: %d, %d, %d, %d, %d %d,\n", index, elementsPerThread, threadIdx.y, threadIdx.x, BLOCK_WIDTH, numberOfElements);
 			if(abs(matrix->elements[index]) > localMaxVal) {
 				localMaxInd = index;
 				localMaxVal = matrix->elements[index];
 			}
 		}
 	}
-
-	if(threadIdx.x == 0 && threadIdx.y == 0){
-			sharedMaxInd = new int[BLOCK_WIDTH * BLOCK_WIDTH]();
-			sharedMaxVal = new double[BLOCK_WIDTH * BLOCK_WIDTH]();
-	}
+	//printf("%d, %f\n", localMaxInd, localMaxVal);
+//	if(threadIdx.x == 0 && threadIdx.y == 0){
+//			sharedMaxInd = new int[BLOCK_WIDTH * BLOCK_WIDTH]();
+//			sharedMaxVal = new double[BLOCK_WIDTH * BLOCK_WIDTH]();
+//	}
 
 	__syncthreads();
 	// Assign each threads result to a unique index (based on thread) in __shared__ memory space
@@ -364,9 +385,6 @@ __device__ void d_findMaxInd(h_Matrix* matrix, int* maxInd, double* maxVal){
 				maxInd[0] = sharedMaxInd[i];
 			}
 		}
-
-		delete [] sharedMaxInd;
-		delete [] sharedMaxVal;
 	}
 }
 
@@ -423,7 +441,11 @@ __device__ void d_IP3d_max(h_Matrix* re, h_Matrix* v1, h_Matrix* v2, h_Matrix* v
 			}
 			__syncthreads();
 			d_findMaxInd(cc, maxInd, maxVal);
-			SINGLE_THREAD{ printf("\n%f, %f, %f, %d, %d\n", maxVal[0], aMatrix.elements[0], cc->elements[0], cc->height, cc->width); }
+			__syncthreads();
+//			SINGLE_THREAD{
+//				printf("%f, %f, %d, %d\n", v3->getElement(i,j)[0], cc->elements[0], v2->width, v2->height);
+//			}
+//			}
 		}
 	}
 
@@ -489,6 +511,7 @@ __device__ void d_squaredSum(h_Matrix* matrix, double* sum){
 			sum[0] += sharedSquaredSum[i];
 		}
 	}
+	__syncthreads();
 }
 
 __global__ void d_squaredSumKernel(h_Matrix* matrix, double* sum){
@@ -544,7 +567,6 @@ __global__ void d_matrixSubtractionKernel(h_Matrix* matrixA, h_Matrix* matrixB, 
 
 __device__ void d_ProjMP3d(h_Matrix* h, h_Matrix* re, h_Matrix* v1, h_Matrix* v2, h_Matrix* v3, h_Matrix* c, double* toln, int* max){
 
-
 	double delta 	= 	1 / (double)(v1->height * v2->height * v3->height);
 	double tol2		=	1e-11;
 	__shared__ h_Matrix* hnew;
@@ -552,96 +574,67 @@ __device__ void d_ProjMP3d(h_Matrix* h, h_Matrix* re, h_Matrix* v1, h_Matrix* v2
 	__shared__ double* hnewElements;
 	__shared__ double* ccElements;
 
-	printf("%d,%d,%d     %d,%d,%d     ", re->height, re->width, re->depth, v1->height, v1->width, v1->depth);
-
 	if(threadIdx.x == 0 && threadIdx.y == 0){
-
 		hnew = new h_Matrix(v1->height, v2->height, v3->height);
 		hnewElements = new double[hnew->numel()]();
 		hnew->elements = hnewElements;
 		cc = new h_Matrix(1, v1->width, 1);
-
-
-	}
-	if(threadIdx.x == 0 && threadIdx.y == 1){
-	for(int i = 0; i < v1->numel(); i++){
-				printf("%f, ", v1->elements[i]);
-			}
 	}
 	__syncthreads();
 
 	for(int it = 0; it < max[0]; it++){
-		if(threadIdx.x == 0 && threadIdx.y == 0){
+		SINGLE_THREAD{
 			if(!ccElements){ delete [] ccElements; };
 			ccElements = new double[cc->numel()]();
 			cc->elements = ccElements;
+
+			for(int i = 0; i < re->numel(); i++){
+				printf("%f, ", re->elements[i]);
+			}
 		}
 
 		__syncthreads();
-
-		d_IPSP3d(re, v1, v2, v3, cc );
+		d_IPSP3d( re, v1, v2, v3, cc );
 		__syncthreads();
 
 		__shared__ int maxInd;
 		__shared__ double maxVal;
 
-		if(threadIdx.x == 0 && threadIdx.y == 0){
+		SINGLE_THREAD{
 			maxInd = 0;
 			maxVal = 0.0;
-			d_findMaxInd(cc, &maxInd, &maxVal);
 		}
 
-	__syncthreads();
+		d_findMaxInd(cc, &maxInd, &maxVal);
+		__syncthreads();
+		printf("%f\n", maxVal);
+		if (abs(maxVal) < tol2){ SINGLE_THREAD{printf("breaking maxVal- %g < %g, %d, %d, %d\n", maxVal, tol2, it, threadIdx.x, threadIdx.y);} break; }
 
-//	printf("%d, %f\t", maxInd, maxVal);
-	if(threadIdx.x == 0 && threadIdx.y == 0){
-		printf("\n%g, %g\t\n", maxVal, tol2);
-		for(int i = 0; i < cc->numel(); i++){
-			printf("%f, ", cc->elements[i]);
+		h_Matrix v1Col = v1->getCol(maxInd);
+		h_Matrix v2Col = v2->getCol(maxInd);
+		h_Matrix v3Col = v3->getCol(maxInd);
+
+		__syncthreads();
+
+		d_hnew3d(maxVal, &v1Col, &v2Col, &v3Col, hnew);
+		c->elements[maxInd] += cc->elements[maxInd];
+
+		__syncthreads();
+
+		__shared__ double nornu;
+		if(threadIdx.x == 0 && threadIdx.y == 0){
+			nornu = 0;
+			delete [] ccElements;
 		}
-		printf("\n\n\n");
-	}
-	if (maxVal < tol2){ printf("breaking maxVal"); break; }
 
-	h_Matrix v1Col = v1->getCol(maxInd);
-	h_Matrix v2Col = v2->getCol(maxInd);
-	h_Matrix v3Col = v3->getCol(maxInd);
+		d_matrixAddition(h, hnew, h);
+		d_matrixSubtraction(re, hnew, re);
+		d_squaredSum(hnew, &nornu);
 
 	__syncthreads();
 
-	d_hnew3d(maxVal, &v1Col, &v2Col, &v3Col, hnew);
-	c->elements[maxInd] += cc->elements[maxInd];
+	if (nornu * delta <= toln[0]){ SINGLE_THREAD{printf("nornu break");}; break; }
 
-	__syncthreads();
-
-	__shared__ double nornu;
-	if(threadIdx.x == 0 && threadIdx.y == 0){
-		nornu = 0;
-		delete [] ccElements;
-//		for(int i = 0; i < hnew->numel(); i++){
-//					printf("%f, ", hnew->elements[i]);
-//		}
-		printf("\n");
-	}
-
-
-
-	d_matrixAddition(h, hnew, h);
-	d_matrixSubtraction(re, hnew, re);
-	d_squaredSum(hnew, &nornu);
-
-	__syncthreads();
-//	if(threadIdx.x == 0 && threadIdx.y == 0){
-//		for(int i = 0; i < re->numel(); i++){
-//			printf("%f, ", re->elements[i]);
-//		}http://s.symcb.com/universal-root.crl
-//	}
-
-	if(threadIdx.x == 0 && threadIdx.y == 0){
-		printf("%f, \n", nornu);
-
-	}
-	if (nornu * delta <= toln[0]){ break; }
 	}
 }
 
@@ -670,11 +663,12 @@ __global__ void d_SPMP3D(h_Matrix* f, h_Matrix* Vx, h_Matrix* Vy, h_Matrix* Vz,
 			delta = 1.0/ Nxyz;
 
 			numat[0] = 0;
+			printf("Tol: %f\n", tol[0]);
 		}
 
-		double* Di1;
-		double* Di2;
-		double* Di3;
+		__shared__ double* Di1;
+		__shared__ double* Di2;
+		__shared__ double* Di3;
 
 		// Not including Dix, Diy, Diz, numind since custom indexing is not priority
 
@@ -690,8 +684,6 @@ __global__ void d_SPMP3D(h_Matrix* f, h_Matrix* Vx, h_Matrix* Vy, h_Matrix* Vz,
 
 
 		//todo Can cp be optimised so it can be stored on shared mem? (Currently too large 40*40*15!)
-		double* cpElements;
-		__shared__ h_Matrix* cp;
 		__shared__ double* ccElements;
 		__shared__ h_Matrix* cc;
 		__shared__ h_Matrix* Re;
@@ -701,12 +693,8 @@ __global__ void d_SPMP3D(h_Matrix* f, h_Matrix* Vx, h_Matrix* Vy, h_Matrix* Vz,
 		__shared__ int Maxit2;
 
 		SINGLE_THREAD{
-			cpElements = new double[Vx->width * Vy->width * Vz->width];
-			cp = new h_Matrix(cpElements, Vx->width, Vy->width, Vz->width);
-
 			ccElements = new double[Vx->width * Vy->width]; // Reduced size so it can be shared
 			cc = new h_Matrix(ccElements, Vx->width, Vy->width,1);
-
 			ReElements  = new double[f->numel()];
 			Re = new h_Matrix(ReElements, f->height, f->width, f->depth);
 
@@ -732,60 +720,73 @@ __global__ void d_SPMP3D(h_Matrix* f, h_Matrix* Vx, h_Matrix* Vy, h_Matrix* Vz,
 		__shared__ double* multResultElements;
 		__shared__ h_Matrix* multResult;
 
+		__shared__ h_Matrix* Set_ind_trans;
+		__shared__ double* Set_ind_trans_elements;
+		__shared__ h_Matrix* Set_ind_container;
+
 		SINGLE_THREAD{
 			h_new_elements = new double[Vx->height * Vy->height * Vz->height]();
 			h_new = new h_Matrix(h_new_elements, Vx->height, Vy->height, Vz->height);
 
 			multResultElements = new double[Vx->height];
 			multResult = new h_Matrix(multResultElements, 1, Vx->height, 1);
+
+			Set_ind_trans = new h_Matrix(1,1,1);
 		}
 
-		__shared__ int it;
-		__shared__ int s;
-		//for((threadIdx.x == 0 && threadIdx.y == 0) ? it = 0 : it; it < Maxit2; (threadIdx.x == 0 && threadIdx.y == 0) ? it++ : it){
-		SINGLE_THREAD{ it = s = 0; }
 
+
+
+		//for((threadIdx.x == 0 && threadIdx.y == 0) ? it = 0 : it; it < Maxit2; (threadIdx.x == 0 && threadIdx.y == 0) ? it++ : it){
+	//	Maxit2 = 1;
+	//	lstep[0] = 10;
 		__syncthreads();
-		while(it < Maxit2){
+		int it;
+		for(it = 0; it < Maxit2; it++){
 			__syncthreads();
-			while(s < lstep[0]){
-				// Not including custom indexing processing since it is not priority
+			for(int s = 0; s < lstep[0]; s++){
+//				// Not including custom indexing processing since it is not priority
 				__shared__ double maxVal;
 				__shared__ int maxInd;
 				SINGLE_THREAD{ maxVal = 0; maxInd = 0; }
+//
 				__syncthreads();
 				d_IP3d_max(Re, Vx, Vy, Vz, cc, &maxVal, &maxInd); // Returns maxVal as normal form, i.e. not absolute. Hence cscra = maxVal, maxVal = abs(maxVal)
-				SINGLE_THREAD{ ind2sub(cc->height, cc->width, cc->depth, maxInd, q); }
-
 				__syncthreads();
+				SINGLE_THREAD{ ind2sub(cc->height, cc->width, cc->depth, maxInd, q); }
+				__syncthreads();
+//
 				if(abs(maxVal) < tol2){
 					SINGLE_THREAD{
-						printf("SPMP3D stopped, max(|<f,q|/||q||) <= tol2 %g,%g", maxVal, tol2);
-						delete [] cc;
-						delete [] cp;
-						delete [] multResult;
-						delete [] h_new;
-						delete [] Re;
+						printf("SPMP3D stopped, max(|<f,q|/||q||) <= tol2 %g,%g,%g,%d,%d,%d\n", maxVal, tol2, cc->elements[0],it,s, maxInd);
+						delete cc;
+						delete multResult;
+						delete h_new;
+						delete Re;
 					}
 					__syncthreads();
 					return;
 				}
+//
+//
+//				// Has the indice been stored already, if not add it.
 
-
-				// Has the indice been stored already, if not add it.
 				if (numat[0] == 0){
 					SINGLE_THREAD{
 						Set_ind[0] = q[0];
 						Set_ind[1] = q[1];
 						Set_ind[2] = q[2];
 						numat[0] += 1;
+						c->elements[numat[0]] = maxVal;
 					}
 				}else{
 					SINGLE_THREAD{ // Set_ind is small reducing via multiple threads would take longer
 						int exists = 0;
+						int index = 0;
 						for(int k = 0; k < numat[0]; k++){
 							if(Set_ind[k * 3] == q[0] && Set_ind[k * 3 + 1] == q[1] && Set_ind[k * 3 + 2] == q[2]){
 								exists = 1;
+								index = k;
 							}
 						}
 
@@ -794,16 +795,16 @@ __global__ void d_SPMP3D(h_Matrix* f, h_Matrix* Vx, h_Matrix* Vy, h_Matrix* Vz,
 						 Set_ind[(numat[0]) * 3 + 1] = q[1];
 						 Set_ind[(numat[0]) * 3 + 2] = q[2];
 						 numat[0] += 1;
+						 c->elements[numat[0]] = maxVal;
+						}else{
+							c->elements[index] += maxVal;
 						}
 					}
 				}
-
-				//d_hnew3d(maxVal, Vx, Vy, Vz, h_new);
-
-				SINGLE_THREAD{
-					cp->elements[(cp->height*cp->width) * q[2] + (cp->height * q[1]) + q[0]] += maxVal;
-				}
-
+//
+				SINGLE_THREAD{ printf("\n%f\n", maxVal); }
+				d_hnew3d(maxVal, &(Vx->getCol(q[0])), &(Vy->getCol(q[1])), &(Vz->getCol(q[2])), h_new);
+				SINGLE_THREAD{ printf("hnew: %f\n", h_new->elements[0]); }
 				__syncthreads();
 
 				d_matrixAddition(h, h_new, h);
@@ -814,22 +815,117 @@ __global__ void d_SPMP3D(h_Matrix* f, h_Matrix* Vx, h_Matrix* Vy, h_Matrix* Vz,
 				__shared__ double nor_new;
 				d_squaredSum(Re, &nor_new);
 				__syncthreads();
+				SINGLE_THREAD{printf("%d,%d, %f, %f, %f\n", it, s, nor_new * delta, nor_new, tol[0]);}
+				SINGLE_THREAD{
+					for(int i = 0; i < Re->numel(); i++){
+						printf("%f, ", h_new->elements[i]);
+					}
+				}
 				if(numat[0] >= No[0] || ((nor_new * delta) < tol[0])) break;
 
-				SINGLE_THREAD{ s++; }
 				__syncthreads();
 			}
-			SINGLE_THREAD{ it++; }
 			__syncthreads();
+
+			if(imp != 1){
+
+				SINGLE_THREAD{
+					if(Set_ind_trans){delete Set_ind_trans;}
+					if(Set_ind_container){delete Set_ind_container;}
+					Set_ind_trans_elements = new double[numat[0] * 3];
+					Set_ind_trans = new h_Matrix(Set_ind_trans_elements, numat[0], 3, 1);
+					Set_ind_container = new h_Matrix(Set_ind, 3, numat[0], 1);
+				}
+
+				__syncthreads();
+
+				transpose(Set_ind_trans, Set_ind_container);
+
+				__syncthreads();
+				__shared__ h_Matrix* VxTemp;
+				__shared__ h_Matrix* VyTemp;
+				__shared__ h_Matrix* VzTemp;
+
+				__shared__ double* VxTempElements;
+				__shared__ double* VyTempElements;
+				__shared__ double* VzTempElements;
+
+				if(threadIdx.x == 0 && threadIdx.y == 0){
+					Di1 = Set_ind_trans->getColDouble(0);
+					Di2 = Set_ind_trans->getColDouble(1);
+					Di3 = Set_ind_trans->getColDouble(2);
+				}
+				if(threadIdx.x == 0 && threadIdx.y == 1){
+					VxTempElements = new double[Vx->height * numat[0]];
+					VxTemp = new h_Matrix(VxTempElements, Vx->height, numat[0], 1);
+				}
+				if(threadIdx.x == 0 && threadIdx.y == 2){
+					VyTempElements = new double[Vy->height * numat[0]];
+					VyTemp = new h_Matrix(VyTempElements, Vy->height, numat[0], 1);
+				}
+				if(threadIdx.x == 0 && threadIdx.y == 3){
+					VzTempElements = new double[Vz->height * numat[0]];
+					VzTemp = new h_Matrix(VzTempElements, Vz->height, numat[0], 1);
+				}
+
+				__syncthreads();
+
+				for( int k = 0; k < ((numat[0] / BLOCK_WIDTH) + (numat[0] % BLOCK_WIDTH == 0) ? 0 : 1 ); k++){ //threadId.y will deal with the cols, threadIdx.x will deal with rows
+					for( int x = 0; x < ((Vx->height / BLOCK_WIDTH) + (Vx->height % BLOCK_WIDTH == 0) ? 0 : 1); x++){
+						if((k * BLOCK_WIDTH + threadIdx.y) * Vx->height + x * BLOCK_WIDTH + threadIdx.x < VxTemp->numel()){
+							VxTemp->elements[(k * BLOCK_WIDTH + threadIdx.y) * Vx->height + x * BLOCK_WIDTH + threadIdx.x] = Vx->getElement(Di1[k * BLOCK_WIDTH + threadIdx.y], x * BLOCK_WIDTH + threadIdx.x)[0];
+						}
+					}
+					for( int y = 0; y < ((Vy->height / BLOCK_WIDTH) + (Vy->height % BLOCK_WIDTH == 0) ? 0 : 1); y++){
+						if((k * BLOCK_WIDTH + threadIdx.y) * Vy->height + y * BLOCK_WIDTH + threadIdx.x < VyTemp->numel()){
+							VyTemp->elements[(k * BLOCK_WIDTH + threadIdx.y) * Vy->height + y * BLOCK_WIDTH + threadIdx.x] = Vy->getElement(Di2[k * BLOCK_WIDTH + threadIdx.y], y * BLOCK_WIDTH + threadIdx.x)[0];
+						}
+					}
+					for( int z = 0; z < ((Vz->height / BLOCK_WIDTH) + (Vz->height % BLOCK_WIDTH == 0) ? 0 : 1); z++){
+						if((k * BLOCK_WIDTH + threadIdx.y) * Vz->height + z * BLOCK_WIDTH + threadIdx.x < VzTemp->numel()){
+							VzTemp->elements[(k * BLOCK_WIDTH + threadIdx.y) * Vz->height + z * BLOCK_WIDTH + threadIdx.x] = Vz->getElement(Di3[k * BLOCK_WIDTH + threadIdx.y], z * BLOCK_WIDTH + threadIdx.x)[0];
+						}
+					}
+				}
+				__syncthreads();
+
+				SINGLE_THREAD{
+					printf("\nVxTemp:\n");
+					for(int i  = 0; i < VxTemp->numel(); i++){
+						printf("%f, ", VxTemp->elements[i]);
+					}
+					printf("\nVyTemp:\n");
+					for(int i  = 0; i < VyTemp->numel(); i++){
+						printf("%f, ", VyTemp->elements[i]);
+					}
+					printf("\nVzTemp:\n");
+					for(int i  = 0; i < VzTemp->numel(); i++){
+						printf("%f, ", VzTemp->elements[i]);
+					}
+				}
+
+				__syncthreads();
+				d_ProjMP3d(h, Re, VxTemp, VyTemp, VzTemp, c, toln, Max);
+				__syncthreads();
+				SINGLE_THREAD{
+					delete VxTemp;
+					delete VyTemp;
+					delete VzTemp;
+				}
+
+			}
+
+			__shared__ double nore;
+			SINGLE_THREAD{ nore = 0; }
+			d_squaredSum(Re, &nore);
+
+			if(numat[0] >= No[0] || ((nore * delta) < tol[0])){ break; }
+
 		}
-		printf("test");
 
-
-
-
-
-
-
+		if((lstep[0] != Max[0]) || it == Maxit2){
+			printf("Maximum Iterations has been reached");
+		}
 
 }
 
@@ -951,3 +1047,4 @@ __global__ void d_SPMP3D(h_Matrix* f, h_Matrix* Vx, h_Matrix* Vy, h_Matrix* Vz,
 //}
 
 #endif
+
