@@ -1,17 +1,19 @@
 %test rgb images to use the same indexes apprximated by OMPMl (1D)
 
 %load the image 
-
-ImagePath='Images/027_opo0613a_256.jpg' 
+function [PSNR, SR, SSIM] = test_OMP3D_Dan(ImagePath, bw);
+%ImagePath='Images/027_opo0613a.jpg' 
+%ImagePath = 'Images/forever.jpg'
+if nargin<2 ; bw = 8; end;
+if nargin<1 ; ImagePath = 'Images/kodak7.png'; end;
 % ImagePath='Images/027_opo0613a.jpg' 
-
+ImagePath
 %
 %%%%%%%%%%%%%%%%prnr for tol%%%%
 pss=40.5;
 %%%%%%%%%%%%%%%%%%
 SRT=15;
 clear AA fs mIAp
-bw=8
 blockWidth=bw;
 Lz=3;
 
@@ -111,7 +113,7 @@ fs(:,:,2)=B2;
 fs(:,:,3)=B3;
  if (norm(B1,'fro')+ norm(B1,'fro')+norm(B1,'fro'))>1e-9
 
-[h,cDi1,cDi2,cDi3,beta,c,Q,nore1]=OMP3D_mex(fs,Dx,Dy,Dz,tol,No,indx,indy,indz);
+[h,cDi1,cDi2,cDi3,beta,c,Q,nore1]=OMP3D_m(fs,Dx,Dy,Dz,tol,No,indx,indy,indz);
 
   cc{k}=c;
   cmIa1{i,j}=h(:,:,1);
@@ -149,8 +151,12 @@ mIAp(:,:,3)=mImage3;
 fprintf('number of dark blocks.\n')
 darkb
 
-figure, plot(timeTakenPerBlock);
 timeTaken = sum(timeTakenPerBlock)
+%figure, plot(timeTakenPerBlock);
+AOrig(:,:,1) = cell2mat(cmI1);
+AOrig(:,:,2) = cell2mat(cmI2);
+AOrig(:,:,3) = cell2mat(cmI3);
+SSIM = ssim(AOrig, mIAp)
 
 toc
 return
