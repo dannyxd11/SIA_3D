@@ -1,33 +1,12 @@
 #include "mex.h"
 #include "commonOps.cpp"
 #include "ProjMP3D.cpp"
-#include "IP3D.cpp"
+#include "oldIP3D.cpp"
 #include "hnew3D.cpp"
 #include <cmath>
 
 using namespace std;
 
-double sumOfSquares(double *matrix, int *dimensions) {
-    double sum = 0;
-    for (int i = 0; i < dimensions[0] * dimensions[1] * dimensions[2]; i++) {
-        sum += matrix[i] * matrix[i];
-    }
-    return sum;
-}
-
-
-int max(double *matrix, int *dimensions) {
-    double maxValue = 0;
-    int n1 = -1;
-    for (int k = 0; k < dimensions[0] * dimensions[1] * dimensions[2]; k++) {
-        double cur = std::abs(matrix[k]);
-        if (cur > maxValue ) {
-            maxValue = cur;
-            n1 = k;
-        }
-    }
-    return n1;
-}
 
 int validateIndex(double indk, double *Di, int *DiDim) {
     for (int i = 0; i < DiDim[0] * DiDim[1] * DiDim[2]; i++) {
@@ -39,27 +18,7 @@ int validateIndex(double indk, double *Di, int *DiDim) {
     return 0;
 }
 
-void initiateRangeVector(double *vector, int size) {
-    for (int i = 0; i < size; i++) {
-        vector[i] = i + 1;
-    }
-}
 
-int nonZeroNumel(double* m, int size){
-    int numel = 0;
-    for(int i = 0; i < size; i++){
-        if(m[i] != 0) numel += 1;
-    }
-    return numel;
-}
-
-void ind2sub(int *dimensions, int index, int *q) {
-    int plane = dimensions[0] * dimensions[1];
-    q[2] = index / plane;
-    int rem = index % plane;
-    q[1] = rem / dimensions[0];
-    q[0] = rem % dimensions[1];
-}
 
 
 void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim, double* Vz, int* VzDim,
@@ -592,7 +551,18 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
 void mexFunction(int nlhs, mxArray *plhs[],
                  int nrhs, const mxArray *prhs[]) {
 
+    // Condition the input variables so that they are in the correct format for the C/C++ program
+    double* input = mxGetPr(prhs[0]);
+    int height, width = 1;
+    plhs[0] = mxCreateDoubleArray(height, width, mxREAL);
+    double* output = mxGetPr(plhs[0]);
 
+    // Run the C/C++ function
+    testFunction(input, output);
+
+
+
+    //
     //todo validation
     double *f = mxGetPr(prhs[0]);
     double *Vx = mxGetPr(prhs[1]);

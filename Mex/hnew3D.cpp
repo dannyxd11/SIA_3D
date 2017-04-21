@@ -1,7 +1,6 @@
 #ifndef HNEW3D
 #define HNEW3D
 
-#include "mex.h"
 #include <iostream>
 #include <stdlib.h>
 #include <cstring>

@@ -10,15 +10,6 @@
 // Created by Dan on 26/01/2017.
 //
 
-void changeDimensions(double *matrix, int *curDimensions, int height, int width, int depth) {
-    double *newMatrix = new double[height * width * depth];
-    memcpy(newMatrix, matrix, sizeof(double) * height * width * depth);
-
-    delete[] matrix;
-    matrix = newMatrix;
-    setDimensions(height, width, depth, curDimensions);
-}
-
 int validateIndex(double indk, double *Di, int *DiDim) {
     for (int i = 0; i < DiDim[0] * DiDim[1] * DiDim[2]; i++) {
         if (Di[i] == indk) {
@@ -29,45 +20,6 @@ int validateIndex(double indk, double *Di, int *DiDim) {
     return 0;
 }
 
-int ismember(double* matrix, int size, double member){
-    for (int i = 0; i < size; i++) {
-        if (matrix[i] == member) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-int max(double *matrix, int *dimensions) {
-    double maxValue = 0;
-    int n1 = -1;
-    for (int k = 0; k < dimensions[0] * dimensions[1] * dimensions[2]; k++) {
-        if (std::abs(matrix[k]) > maxValue) {
-            maxValue = std::abs(matrix[k]);
-            n1 = k;
-        }
-    }
-    return n1;
-}
-
-void initiateRangeVector(double *vector, int size) {
-    for (int i = 0; i < size; i++) {
-        vector[i] = i + 1;
-    }
-}
-
-double sumOfSquares(double *matrix, int *dimensions) {
-    double sum = 0;
-    for (int i = 0; i < dimensions[0] * dimensions[1] * dimensions[2]; i++) {
-        sum += matrix[i] * matrix[i];
-    }
-    return sum;
-}
-
-int numel(int *dimensions) {
-    return dimensions[0] * dimensions[1] * dimensions[2];
-}
-
 double vectorNorm(double *matrix, int size) {
     double sum = 0;
     for (int n = 0; n < size; n++) {
@@ -76,13 +28,6 @@ double vectorNorm(double *matrix, int size) {
     return sqrt(sum);
 }
 
-void ind2sub(int *dimensions, int index, int *q) {
-    int plane = dimensions[0] * dimensions[1];
-    q[2] = index / plane;
-    int rem = index % plane;
-    q[1] = rem / dimensions[0];
-    q[0] = rem % dimensions[1];
-}
 
 //void OMP3D(double* f, int* fDim, double* dx, int* dxDim, double* dy, int* dyDim, double* dz, int* dzDim, double tol, int No){
 
@@ -91,8 +36,6 @@ OMP3D(double *f, int *fDim, double *dx, int *dxDim, double *dy, int *dyDim, doub
       double *H, int *HDim, double *Di1, int *Di1Dim, double *Di2, int *Di2Dim, double *Di3, int *Di3Dim, double *beta,
       int *betaDim,
       double *c, int *cDim, double *Q, int *QDim, double *noRe1) {
-
-    std::string name = "OMP23_m";
 
     /*
     [Lx,Nx]=size(Dx);
