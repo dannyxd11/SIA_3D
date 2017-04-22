@@ -2,8 +2,9 @@
     OMP3D has been implemented in MATLAB and MEX C++ (Stability issues currently prevent block sizes larger than 8 x 8)
     SPMP3D has been implemented in MATLAB and MEX C++, whilst a CUDA implementation has been outlined to utilise GPU.
     MEX Files / CUDA Routine Copyright (C) 2017  Daniel Whitehouse, dannyxd@me.com, Aston University
-    MATLAB Routine Copyright (C) 2017, Laura Rebollo-Neira, l.rebollo-neira@aston.ac.uk, Aston University
+    MATLAB Routine Copyright (C) 2017, Laura Rebollo-Neira, l.rebollo-neira@aston.ac.uk, Aston University,  Full Details -> http://www.nonlinear-approx.info/
     Part of a Final Year Project for the Degree of CS + Mathematics at Aston University
+    
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
