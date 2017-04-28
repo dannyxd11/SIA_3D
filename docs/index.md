@@ -7,7 +7,7 @@ The novelty with this project is that the algorithms attempt to take a sparse re
 Further C++ MEX files have been created to provide substancially increased performance, up to 90% when using the smallest realistic block size. 
 An attempt of accelarating the process further by using NVidia's CUDA technology was also made. 
 
-The provided C++ and CUDA files were developed as part of a Final Year Project at Aston University whilst under the supervision of Dr Laura Rebollo-Neira and Dr George Vogiatzis. The MATLAB files, and the Self-Projected Matching Pursuit routine are part of a larger research programme led by Dr Rebollo-Neira, further details can be found at the projects site: http://www.nonlinear-approx.info/.
+The provided C++ and CUDA files were developed as part of a Final Year Project at Aston University whilst under the supervision of Dr Laura Rebollo-Neira and Dr George Vogiatzis. The MATLAB files, and the Self-Projected Matching Pursuit routine are part of a larger research programme led by Dr Rebollo-Neira, further details can be found at the projects site: http://www.nonlinear-approx.info/ 
 
 Although the software here is currently designed for Images, the same software could be used for approximation of 3D images given a suitable sized dictionary for the third / z dimension.
 
