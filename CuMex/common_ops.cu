@@ -41,6 +41,7 @@ __device__ void multiplyCuda(double* a, double* b, double* c, int lda, int ldb, 
 	int y = threadIdx.y; //col
 	int x = threadIdx.x; //row
 	int block_size = 8; //todo allow variable block_sizes
+/*	
 	for(x = threadIdx.x; x < n; x += block_size ){
 		for(y = threadIdx.y; y < m; y += block_size){
 			if (y < m && x < n){
@@ -73,7 +74,60 @@ __device__ void multiplyCuda(double* a, double* b, double* c, int lda, int ldb, 
 				//SINGLE_THREAD{printf("\nRow: %d,%d, A: %f, / %d    B: %f, / %d    C: %f / %d \t K: %d, M: %d, N: %d\n", x,y,a[lda * x + y],lda * y + x,b[ldb * x + y],ldb * x + y,c[ldc * x + y],ldc * y + x, k, m, n);}
 			}
 		}
+	} */
+
+
+	if (op1 == CUBLAS_OP_N && op2 == CUBLAS_OP_N){
+		for(x = threadIdx.x; x < n; x += block_size ){
+			for(y = threadIdx.y; y < m; y += block_size){
+				if (y < m && x < n){
+					double cellSum = 0;
+					for(int i = 0; i < k; i++){
+						cellSum += a[lda * i + y] * b[ldb * x + i] * alpha[0];
+					}
+					c[ldc * x + y] = beta[0] * c[ldc * x + y] + cellSum;
+				}
+			}
+		}
+	}else if(op1 == CUBLAS_OP_T && op2 == CUBLAS_OP_N){
+		for(x = threadIdx.x; x < n; x += block_size ){
+			for(y = threadIdx.y; y < m; y += block_size){
+				if (y < m && x < n){
+					double cellSum = 0;
+					for(int i = 0; i < k; i++){
+						cellSum += a[lda * y + i] * b[ldb * x + i] * alpha[0];
+					}
+					c[ldc * x + y] = beta[0] * c[ldc * x + y] + cellSum;
+				}
+			}
+		}
+	}else if(op1 == CUBLAS_OP_N && op2 == CUBLAS_OP_T){
+		for(x = threadIdx.x; x < n; x += block_size ){
+			for(y = threadIdx.y; y < m; y += block_size){
+				if (y < m && x < n){
+					double cellSum = 0;
+					for(int i = 0; i < k; i++){
+						cellSum += a[lda * i + y] * b[ldb * i + x] * alpha[0];
+					}
+					c[ldc * x + y] = beta[0] * c[ldc * x + y] + cellSum;
+				}
+			}
+		}
+	}else if(op1 == CUBLAS_OP_T && op2 == CUBLAS_OP_T){
+		for(x = threadIdx.x; x < n; x += block_size ){
+			for(y = threadIdx.y; y < m; y += block_size){
+				if (y < m && x < n){
+					double cellSum = 0;
+					for(int i = 0; i < k; i++){
+						cellSum += a[lda * y + i] * b[ldb * i + x] * alpha[0];
+					}
+					c[ldc * x + y] = beta[0] * c[ldc * x + y] + cellSum;
+				}
+			}
+		}
 	}
+
+
 }
 
 
@@ -204,28 +258,20 @@ __device__ void d_findMaxInd(h_Matrix* matrix, int* maxInd, double* maxVal, int 
 	__shared__ int sharedMaxInd[BLOCK_WIDTH * BLOCK_WIDTH];
 	__shared__ double sharedMaxVal[BLOCK_WIDTH * BLOCK_WIDTH];
 
-
-
-	// Split array into equal sizes to be processed by each thread
+	__syncthreads();
 
 	for(int i = 0; i < elementsPerThread; i++){
 		int index = elementsPerThread * (threadIdx.y * BLOCK_WIDTH + threadIdx.x) + i;
-		//printf("%d, %d, %d, %d, %d %d,\n", index, elementsPerThread, threadIdx.y, threadIdx.x, i, numberOfElements);
-		if(index < numberOfElements){
-			//printf("INSIDE: %d, %d, %d, %d, %d %d, %f\n", index, elementsPerThread, threadIdx.y, threadIdx.x, BLOCK_WIDTH, numberOfElements,abs(matrix->elements[index]));
-			if(abs(matrix->elements[index]) > localMaxVal) {
-				localMaxInd = index;
-				localMaxVal = matrix->elements[index];
+		if(index <= numberOfElements){
+			if(index < matrix->numel()){
+				if(abs(matrix->elements[index]) > abs(localMaxVal)) {
+					localMaxInd = index;
+					localMaxVal = matrix->elements[index];				
+				}
 			}
 		}
 	}
-	//printf("%d, %f\n", localMaxInd, localMaxVal);
-//	if(threadIdx.x == 0 && threadIdx.y == 0){
-//			sharedMaxInd = new int[BLOCK_WIDTH * BLOCK_WIDTH]();
-//			sharedMaxVal = new double[BLOCK_WIDTH * BLOCK_WIDTH]();
-//	}
 
-	__syncthreads();
 	// Assign each threads result to a unique index (based on thread) in __shared__ memory space
 	sharedMaxInd[threadIdx.y * BLOCK_WIDTH + threadIdx.x] = localMaxInd;
 	sharedMaxVal[threadIdx.y * BLOCK_WIDTH + threadIdx.x] = localMaxVal;
@@ -234,6 +280,7 @@ __device__ void d_findMaxInd(h_Matrix* matrix, int* maxInd, double* maxVal, int 
 	// Use just one thread to process the reduced array. Could possibly be done recursively
 	SINGLE_THREAD{
 		for(int i = 0; i < BLOCK_WIDTH * BLOCK_WIDTH; i++){
+			//if(dimension == 6){printf("\n%d, %f, ", i, sharedMaxVal[i]);}			
 			if(abs(sharedMaxVal[i]) > abs(maxVal[0])){
 				maxVal[0] = sharedMaxVal[i];
 				maxInd[0] = dimension * matrix->height * matrix->width + sharedMaxInd[i];

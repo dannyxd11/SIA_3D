@@ -70,7 +70,23 @@ CUDA_HOST_DEV void h_Matrix::multDoubleElementwise(double val){
 	}
 }
 
-CUDA_HOST_DEV h_Matrix::~h_Matrix(){
+#ifdef __CUDA_ARCH__
+__device__ h_Matrix::~h_Matrix(){
+	if(devElements){
+		//delete [] devElements;
+		if(devElements != 0){		
+			delete [] devElements;
+		}
+	}
+	if(elements && preventFree == 0){ //  && *elements != NULL){
+		if(elements != 0){
+			delete [] elements;
+		}
+	}
+
+}
+#else
+__host__ h_Matrix::~h_Matrix(){
 	if(devElements){
 		//delete [] devElements;
 		if(devElements != 0){		
@@ -83,6 +99,7 @@ CUDA_HOST_DEV h_Matrix::~h_Matrix(){
 		}
 	}
 }
+#endif
 
 //todo sort this out..
 CUDA_HOST_DEV void h_Matrix::multiply(h_Matrix* a, h_Matrix* b, h_Matrix* result){

@@ -117,9 +117,7 @@ h_Matrix copyMatrixToHost(h_Matrix *deviceMatrix){
 
 // destMatrix Elements must be initalized
 __device__ int makeCopyOfMatrixElements(h_Matrix* destMatrix, h_Matrix* srcMatrix){
-	if(destMatrix->numel() != srcMatrix->numel() || destMatrix->height != srcMatrix->height || destMatrix->width != srcMatrix->width){
-		return -1;
-	}
+
 	for(int i = 0 ; i < (srcMatrix->numel() / (BLOCK_WIDTH*BLOCK_WIDTH)) + ((srcMatrix->numel() % (BLOCK_WIDTH*BLOCK_WIDTH) == 0) ? 0 : +1); i++){
 		int index = i * (BLOCK_WIDTH * BLOCK_WIDTH) + (threadIdx.x * srcMatrix->height + threadIdx.y);
 		destMatrix->elements[index] = srcMatrix->elements[index];
