@@ -12,16 +12,21 @@ The provided C++ and CUDA files were developed as part of a Final Year Project a
 Although the software here is currently designed for Images, the same software could be used for approximation of 3D images given a suitable sized dictionary for the third / z dimension.
 
 Below is an example of an approximation made with SPMP3D when projection is taking place every iteration. This is equivilent to Orthogonal Matching Pursuit.
-The target PSNR is 50dB with a square block size of 8 x 8. 
-The achieved Sparsity Ratio was 11.0948.
+The target PSNR is 47dB with a square block size of 8 x 8. 
+The achieved Sparsity Ratio was 19.5924.
 
 ### Original Image
 [![Original Image](https://dannyxd11.github.io/SIA_3D/docs/Images/heic1209a.png "Original Image")](https://dannyxd11.github.io/SIA_3D/docs/Images/original.png)
 heic1209a.png courtesy of the ESA - <https://www.spacetelescope.org/>
 
 ### Approximated Image
-[![Approximated Image](https://dannyxd11.github.io/SIA_3D/docs/Images/Approximation.png "Approximated Image")](https://dannyxd11.github.io/SIA_3D/docs/Images/Approximation.png)
+[![Approximated Image](https://dannyxd11.github.io/SIA_3D/docs/Images/approximation-47dB-19.5924.png "Approximated Image")](https://dannyxd11.github.io/SIA_3D/docs/Images/approximation-47dB-19.5924.png)
 
+#### Other Approximations:
+[PNSR : 40dB - Sparsity Ratio : 64.61166](https://dannyxd11.github.io/SIA_3D/docs/Images/approximation-40dB-64.6166.png)
+[PNSR : 45dB - Sparsity Ratio : 32.5186](https://dannyxd11.github.io/SIA_3D/docs/Images/approximation-47dB-32.5186.png)
+[PNSR : 55dB - Sparsity Ratio : 6.1855](https://dannyxd11.github.io/SIA_3D/docs/Images/approximation-55dB-6.1855.png)
+[PNSR : 75dB - Sparsity Ratio : 2.239](https://dannyxd11.github.io/SIA_3D/docs/Images/approximation-75dB-2.239.png)
 
 Licence:
 
