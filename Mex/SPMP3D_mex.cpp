@@ -553,6 +553,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
     //
     //todo validation
+    if (nrhs < 10){ mexErrMsgTxt("Not enough input arguments: <fs, Dx, Dy, Dz, tol, No, toln, lstep, Max, Maxp>"); return;}
+
     double *f = mxGetPr(prhs[0]);
     double *Vx = mxGetPr(prhs[1]);
     double *Vy = mxGetPr(prhs[2]);
@@ -563,16 +565,23 @@ void mexFunction(int nlhs, mxArray *plhs[],
     int lstep = (int)(mxGetPr(prhs[7])[0]);
     int Max = (int)(mxGetPr(prhs[8])[0]);
     int Maxp = (int)(mxGetPr(prhs[9])[0]);
-    int* indx = (int*)mxGetData(prhs[10]);
-    int* indy = (int*)mxGetData(prhs[10]);
-    int* indz = (int*)mxGetData(prhs[10]);
 
+    //todo indx,indy,indz not yet supported.
+    int *indx;
+    int *indy;
+    int *indz;
+
+    if (nrhs > 10 &&  nrhs == 13) {
+        indx = (int *) mxGetData(prhs[10]);
+        indy = (int *) mxGetData(prhs[11]);
+        indz = (int *) mxGetData(prhs[12]);
+    }else if(nrhs > 10 && nrhs != 13){ mexErrMsgTxt("Not enough input arguments: <fs, Dx, Dy, Dz, tol, No, toln, lstep, Max, Maxp, indx, indy, indz>\nCustom Indexing not yet supported"); return; }
     int fDim[] = {mxGetDimensions(prhs[0])[0], mxGetDimensions(prhs[0])[1],mxGetDimensions(prhs[0])[2]};
     int VxDim[] = {mxGetDimensions(prhs[1])[0], mxGetDimensions(prhs[1])[1],mxGetDimensions(prhs[1])[2]};
     int VyDim[] = {mxGetDimensions(prhs[2])[0], mxGetDimensions(prhs[2])[1],mxGetDimensions(prhs[2])[2]};
     int VzDim[] = {mxGetDimensions(prhs[3])[0], mxGetDimensions(prhs[3])[1],mxGetDimensions(prhs[3])[2]};
 
-    //todo indx,indy,indz not yet supported.
+
 
     int hDims = 3; int hDim[] = {VxDim[0], VyDim[0], VzDim[0]};
     plhs[0] = mxCreateNumericArray(hDims, hDim, mxDOUBLE_CLASS, mxREAL);
