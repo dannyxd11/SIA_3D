@@ -15,8 +15,8 @@ Although the software here is currently designed for Images, the same software c
 
 Licence:
 
-MEX Files / CUDA Routine Copyright (C) 2017  Daniel Whitehouse, dannyxd@me.com, Aston University
-MATLAB Routine Copyright (C) 2017, Laura Rebollo-Neira, l.rebollo-neira@aston.ac.uk, Aston University,  Full Details -> <http://www.nonlinear-approx.info/>
+MEX Files / CUDA Routine Copyright (C) 2017  Daniel Whitehouse, <dannyxd@me.com>, Aston University
+MATLAB Routine Copyright (C) 2017, Laura Rebollo-Neira, <l.rebollo-neira@aston.ac.uk>, Aston University,  Full Details at <http://www.nonlinear-approx.info/>
 Part of a Final Year Project for the Degree of Computer Science and Mathematics at Aston University
 
 
