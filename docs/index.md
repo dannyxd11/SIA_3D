@@ -24,8 +24,11 @@ heic1209a.png courtesy of the ESA - <https://www.spacetelescope.org/>
 
 #### Other Approximations:
 [PNSR : 40dB - Sparsity Ratio : 64.61166](https://dannyxd11.github.io/SIA_3D/docs/Images/approximation-40dB-64.6166.png)
+
 [PNSR : 45dB - Sparsity Ratio : 32.5186](https://dannyxd11.github.io/SIA_3D/docs/Images/approximation-47dB-32.5186.png)
+
 [PNSR : 55dB - Sparsity Ratio : 6.1855](https://dannyxd11.github.io/SIA_3D/docs/Images/approximation-55dB-6.1855.png)
+
 [PNSR : 75dB - Sparsity Ratio : 2.239](https://dannyxd11.github.io/SIA_3D/docs/Images/approximation-75dB-2.239.png)
 
 Licence:
