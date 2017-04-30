@@ -12,7 +12,7 @@ The provided C++ and CUDA files were developed as part of a Final Year Project a
 Although the software here is currently designed for Images, the same software could be used for approximation of 3D images given a suitable sized dictionary for the third / z dimension.
 
 
-<Images/Approximation.png>
+![alt text](https://dannyxd11.github.io/SIA_3D/docs/Approximation.png "Logo Title Text 1")
 Licence:
 
 MEX Files / CUDA Routine Copyright (C) 2017  Daniel Whitehouse, <dannyxd@me.com>, Aston University
