@@ -11,8 +11,12 @@ The provided C++ and CUDA files were developed as part of a Final Year Project a
 
 Although the software here is currently designed for Images, the same software could be used for approximation of 3D images given a suitable sized dictionary for the third / z dimension.
 
+#Original Image
+![Original Image - https://www.spacetelescope.org/](https://dannyxd11.github.io/SIA_3D/docs/Images/heic1209a.png "Original Image")
+<https://www.spacetelescope.org/>
 
-![alt text](https://dannyxd11.github.io/SIA_3D/docs/Approximation.png "Logo Title Text 1")
+#Approximated Image
+![Approximated Image](https://dannyxd11.github.io/SIA_3D/docs/Images/Approximation.png "Approximated Image")
 Licence:
 
 MEX Files / CUDA Routine Copyright (C) 2017  Daniel Whitehouse, <dannyxd@me.com>, Aston University
