@@ -11,12 +11,17 @@ The provided C++ and CUDA files were developed as part of a Final Year Project a
 
 Although the software here is currently designed for Images, the same software could be used for approximation of 3D images given a suitable sized dictionary for the third / z dimension.
 
+Below is an example of an approximate made with SPMP3D when projection is taking place every iteration. 
+The target PSNR is 50dB with a square block size of 8 x 8.
+
 ### Original Image
 [![Original Image](https://dannyxd11.github.io/SIA_3D/docs/Images/heic1209a.png "Original Image")](https://dannyxd11.github.io/SIA_3D/docs/Images/heic1209a.png)
 <https://www.spacetelescope.org/>
 
 ### Approximated Image
 [![Approximated Image](https://dannyxd11.github.io/SIA_3D/docs/Images/Approximation.png "Approximated Image")](https://dannyxd11.github.io/SIA_3D/docs/Images/Approximation.png)
+
+
 Licence:
 
 MEX Files / CUDA Routine Copyright (C) 2017  Daniel Whitehouse, <dannyxd@me.com>, Aston University
