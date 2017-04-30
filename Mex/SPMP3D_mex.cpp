@@ -1,7 +1,7 @@
 #include "mex.h"
 #include "commonOps.cpp"
 #include "ProjMP3D.cpp"
-#include "oldIP3D.cpp"
+#include "IP3D.cpp"
 #include "hnew3D.cpp"
 #include <cmath>
 
@@ -550,17 +550,6 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
 
 void mexFunction(int nlhs, mxArray *plhs[],
                  int nrhs, const mxArray *prhs[]) {
-
-    // Condition the input variables so that they are in the correct format for the C/C++ program
-    double* input = mxGetPr(prhs[0]);
-    int height, width = 1;
-    plhs[0] = mxCreateDoubleArray(height, width, mxREAL);
-    double* output = mxGetPr(plhs[0]);
-
-    // Run the C/C++ function
-    testFunction(input, output);
-
-
 
     //
     //todo validation

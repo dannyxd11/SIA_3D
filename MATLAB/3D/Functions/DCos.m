@@ -20,7 +20,7 @@ function mCosines = DCos( szSpace, nFrequencies, redundancy )
 % See   http://www.ncrg.aston.ac.uk/Projects/HNLApprox/
 %       http://www.nonlinear-approx.info/
 
-error(nargchk(1,3,nargin));
+%error(nargchk(1,3,nargin));
 
 if nargin <2
 

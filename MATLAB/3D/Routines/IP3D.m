@@ -11,9 +11,10 @@ cc=zeros(Nx,Ny,Nz);
 %
        for m3=1:Nz
        cc(:,:,m3)=0;
-       for zk=1:Lz
-       cc(:,:,m3)=cc(:,:,m3)+(Vx'*Re(:,:,zk)*Vy).*Vz(zk,m3);
+       for zk=1:Lz       
+            cc(:,:,m3)=cc(:,:,m3)+(Vx'*Re(:,:,zk)*Vy).*Vz(zk,m3);
        end
+       
        end
 %
 

@@ -48,14 +48,14 @@ for it=1:Max;
 %     cc(n)=cc(n)+(V1(:,n)'*Re(:,:,zk)*V2(:,n)).*V3(zk,n);
 %     end
 %     end
-    [cc]=IPSP3D(Re,V1,V2,V3);
+    [cc]=IPSP3D_mex(Re,V1,V2,V3);
 %=============================================
        [c1,n1]=max(abs(cc));
      if c1 < tol2 
      %fprintf('%s stopped, max(|<f,D>|)<= tol2=%g.\n',name,tol2); 
      break;
      end
-     h_new = hnew3D(cc(n1),V1(:,n1), V2(:,n1), V3(:,n1));
+     h_new = hnew3D_mex(cc(n1),V1(:,n1), V2(:,n1), V3(:,n1));
      %for zk=1:L3
      %h_new(:,:,zk)=V1(:,n1)*cc(n1)*V2(:,n1)'*V3(zk,n1);
      %end

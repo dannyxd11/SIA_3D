@@ -103,13 +103,13 @@ for it=1:Maxit2;
 %       end
 %       end
 % %inner product of Residue and all the dictionary atoms
-       [cc]=IP3D(Re,Vx,Vy,Vz);       
+       [cc]=IP3D_mex(Re,Vx,Vy,Vz);       
 %=====================================================
        [max_c,maxind]=max(abs(cc(:))); %chose max index of long vector       
        [q(1),q(2),q(3)]=ind2sub(size(cc),maxind);%reshape to long vector to get the 3D index    
 %
-         if max_c < tol2 %fprintf('%s stopped, max(|<f,D>|)<= tol2=%g.\n',name,tol2); 
-             return; end 
+         if max_c < tol2 %fprintf('%s stopped, max(|<f,D>|)<= tol2=%g.\n',name,tol2);              		
+		 return; end 
     end 
 %This is to collect selected atoms with the same index
       vq=[q(1),q(2),q(3)];
@@ -127,7 +127,7 @@ for it=1:Maxit2;
 %=========================================================================
       cscra=cc(q(1),q(2),q(3)); 
       
-      h_new = hnew3D(cscra, Vx(:,q(1)), Vy(:,q(2)), Vz(:,q(3)));
+      h_new = hnew3D_mex(cscra, Vx(:,q(1)), Vy(:,q(2)), Vz(:,q(3)));
       %for zk=1:Lz
        %h_new(:,:,zk)=Vx(:,q(1))*cscra*Vy(:,(q(2)))'.*Vz(zk,q(3));
       %end %to be added to the previous approximation
@@ -135,8 +135,9 @@ for it=1:Maxit2;
       cp(q(1),q(2),q(3))=cp(q(1),q(2),q(3))+cscra;  %add coefficients of identical atoms
       h=h+h_new; %Approximated Image
       Re=Re-h_new;%
-      nor_new=sum(sum(sum(abs(Re).^2)))*delta; 
-      if (numat>=No | (nor_new < tol)) break;end;
+      nor_new=sum(sum(sum(abs(Re).^2)))*delta;       
+      if (numat>=No | (nor_new < tol)) 
+	      break;end;
   end 
      l=size(Set_ind,1); %number of different atoms
 %======stores coefficients as a vector=========
@@ -148,7 +149,7 @@ if imp ~= 1  %if imp=-1 skips projection
 Di1=Set_ind(:,1);
 Di2=Set_ind(:,2);
 Di3=Set_ind(:,3);
-[h,Re,c]=ProjMP3D(h,Re,Vx(:,Di1),Vy(:,Di2),Vz(:,Di3),c,toln,Maxp);
+[h,Re,c]=ProjMP3D_mex(h,Re,Vx(:,Di1),Vy(:,Di2),Vz(:,Di3),c,toln,Maxp);
 l=numel(c);
 %======================================================
  for n=1:l;
