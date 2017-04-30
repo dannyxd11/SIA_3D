@@ -11,7 +11,7 @@ The provided C++ and CUDA files were developed as part of a Final Year Project a
 
 Although the software here is currently designed for Images, the same software could be used for approximation of 3D images given a suitable sized dictionary for the third / z dimension.
 
-Below is an example of an approximate made with SPMP3D when projection is taking place every iteration. 
+Below is an example of an approximation made with SPMP3D when projection is taking place every iteration. This is equivilent to Orthogonal Matching Pursuit.
 The target PSNR is 50dB with a square block size of 8 x 8. 
 The achieved Sparsity Ratio was 11.0948.
 
