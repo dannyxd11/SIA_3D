@@ -16,7 +16,7 @@ The target PSNR is 47dB with a square block size of 8 x 8.
 The achieved Sparsity Ratio was 19.5924.
 
 ### Original Image
-[![Original Image](https://dannyxd11.github.io/SIA_3D/docs/Images/heic1209a.png "Original Image")](https://dannyxd11.github.io/SIA_3D/docs/Images/original.png)
+[![Original Image](https://dannyxd11.github.io/SIA_3D/docs/Images/original.png "Original Image")](https://dannyxd11.github.io/SIA_3D/docs/Images/original.png)
 heic1209a.png courtesy of the ESA - <https://www.spacetelescope.org/>
 
 ### Approximated Image
