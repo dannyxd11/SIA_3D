@@ -1,6 +1,6 @@
 ## Sparse Image Approximation in 3D
 
-This site hosts implementations of two Matching Pursuit strategies for approximation of colour images. The full report can be [downloaded here](https://github.com/dannyxd11/SIA_3D/blob/gh-pages/docs/Sparse%20Image%20Approximation%20in%203-Dimensions%20with%20GPU%20Utilisation%20-%20Daniel%20Whitehouse%20.pdf). The strategies, termed 'Orthogonal Matching Pursuit' and 'Self-Projected Matching Pursuit' have been prototyped in MATLAB.
+This site hosts implementations of two Matching Pursuit strategies for approximation of colour images. The full report can be [downloaded here](https://github.com/dannyxd11/SIA_3D/raw/gh-pages/docs/Sparse%20Image%20Approximation%20in%203-Dimensions%20with%20GPU%20Utilisation%20-%20Daniel%20Whitehouse%20.pdf). The strategies, termed 'Orthogonal Matching Pursuit' and 'Self-Projected Matching Pursuit' have been prototyped in MATLAB.
 The novelty with this project is that the algorithms attempt to take a sparse representation of every dimension similtaneously through the use of three separable dictionaries, which achieve a high redundancy whilst using low storage. Past projects have tackled the problem by vectorising images into 1D arrays or processing each colour channel individually. Ofcourse, the approach taken in this project is far more computationally intensive which is why an attempt of using the GPU for accelaration has been made. 
 
 Further C++ MEX files have been created to provide substancially increased performance, up to 90% when using the smallest realistic block size. 
