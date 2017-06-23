@@ -1,18 +1,20 @@
 ## Sparse Image Approximation in 3D
 
-This site hosts implementations of two Matching Pursuit strategies for approximation of colour images. The full report can be [downloaded here](https://github.com/dannyxd11/SIA_3D/raw/gh-pages/docs/Sparse%20Image%20Approximation%20in%203-Dimensions%20with%20GPU%20Utilisation%20-%20Daniel%20Whitehouse%20.pdf). The strategies, termed 'Orthogonal Matching Pursuit' and 'Self-Projected Matching Pursuit' have been prototyped in MATLAB.
-The novelty with this project is that the algorithms attempt to take a sparse representation of every dimension similtaneously through the use of three separable dictionaries, which achieve a high redundancy whilst using low storage. Past projects have tackled the problem by vectorising images into 1D arrays or processing each colour channel individually. Ofcourse, the approach taken in this project is far more computationally intensive which is why an attempt of using the GPU for accelaration has been made. 
+This site hosts two different implementations of  the Orthogonal Matching Pursuit (OMP) strategy, for  the approximation of  3D images. In addition to a standard implementation, here dedicated to operate with separable dictionaries in 3D (OMP3D) the low memory  version of the same approach, termed  [Self-Projected Matching Pursuit](http://www.nonlinear-approx.info/examples/node1.html)  is also extended to 3D (SPMP3D).  Both implementations have been shown appropriate for the simultaneous approximation of colour images. By approximating a classic [data set](http://r0k.us/graphics/kodak/),  this project demonstrated that the sparsity achieved by the simultaneous approximation of three colour channels is significantly higher than that achieved  by approximating each channel independently.  The gain in sparsity comes at expenses of computational complexity. Hence, since the approximation is carried out on a partition of the image, the possibility of massive palletization with [GPU](https://en.wikipedia.org/wiki/Graphics_processing_unit) was investigated.
 
-Further C++ MEX files have been created to provide substancially increased performance, up to 90% when using the smallest realistic block size. 
-An attempt of accelarating the process further by using NVidia's CUDA technology was also made resulting in a implementation of MP3D. 
+The project was developed  by [Daniel Whitehouse](https://dan-whitehouse.me), as dissertation for his the [BSc (Hons) Computer Science and Mathematics](http://www.aston.ac.uk/study/undergraduate/courses/eas/bsc-computer-science-and-mathematics/) degree, at  [Aston University](http://www.aston.ac.uk). It was supervised by [Laura Rebollo-Neira](http://www.aston.ac.uk/eas/staff/a-z/dr-laura-rebollo-neira/)  ([Mathematics Department](http://www.aston.ac.uk/eas/about-eas/academic-groups/mathematics/)) and [George Vogiatzis](http://www.aston.ac.uk/eas/staff/a-z/gv/) ([Computer Science Department](http://www.aston.ac.uk/eas/about-eas/academic-groups/computer-science/)).  The main deliveries are: 
 
-The provided C++ and CUDA files were developed as part of a Final Year Project at Aston University whilst under the supervision of Dr Laura Rebollo-Neira and Dr George Vogiatzis. The MATLAB files, and 3D Sparse Image Approximation routines are part of a larger research programme led by Dr Rebollo-Neira, further details can be found at the projects site: <http://www.nonlinear-approx.info/> 
+• Production of C++ MATLAB executables for the SPMP3D and OMP3D approaches,  which significantly increased performance compared to the stand alone MATLAB implementation.
 
-Although the software here is currently designed for Images, the same software could be used for approximation of 3D objects given a suitably sized dictionary for the third / z dimension.
+• An original investigation into the benefit of approximating 3 channel colour images simultaneously, instead of approximating  each colour  independently.
 
-Below is an example of an approximation made with SPMP3D when projection is taking place every iteration. This is equivilent to Orthogonal Matching Pursuit.
-The target PSNR is 47dB with a square block size of 8 x 8. 
-The achieved Sparsity Ratio was 19.5924.
+• A study into the feasibility of using the GPU and fast-access memory for the SPMP3D routine.
+
+• Development of a CUDA enabled command line application for calculating the sparsity ratio of a given image using the plain Matching Pursuit  algorithm dedicated to 3D (MP3D). In addition, an extension to fully support the SPMP3D algorithm has been outlined.
+
+The full report can be [downloaded here](https://github.com/dannyxd11/SIA_3D/raw/gh-pages/docs/Sparse%20Image%20Approximation%20in%203-Dimensions%20with%20GPU%20Utilisation%20-%20Daniel%20Whitehouse%20.pdf). 
+
+Below is an example of an approximation made with SPMP3D when  the projection is taking place at every iteration. This is equivalent to the OMP3D  method.  The target PSNR is 47dB with a square block size of 8 x 8. The achieved Sparsity Ratio (SR) was 19.6 when processing the 3 colours simultaneously with a dictionary of redundancy 125.
 
 ### Original Image
 [![Original Image](https://dannyxd11.github.io/SIA_3D/docs/Images/original.png "Original Image")](https://dannyxd11.github.io/SIA_3D/docs/Images/original.png)
