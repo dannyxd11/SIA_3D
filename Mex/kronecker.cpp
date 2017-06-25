@@ -27,14 +27,14 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
 
     int* aDim = new int[3];
-    setDimensions(mxGetDimensions(prhs[0])[0], mxGetDimensions(prhs[0])[1], mxGetDimensions(prhs[0])[2], aDim);
+    setDimensions((int)mxGetDimensions(prhs[0])[0], (int)mxGetDimensions(prhs[0])[1], (int)mxGetDimensions(prhs[0])[2], aDim);
     double* a = mxGetPr(prhs[0]);
 
 
     //
 
     int* bDim = new int[3];
-    setDimensions(mxGetDimensions(prhs[1])[0], mxGetDimensions(prhs[1])[1], mxGetDimensions(prhs[1])[2], bDim);
+    setDimensions((int)mxGetDimensions(prhs[1])[0], (int)mxGetDimensions(prhs[1])[1], (int)mxGetDimensions(prhs[1])[2], bDim);
     double* b = mxGetPr(prhs[1]);
 
     //
@@ -44,7 +44,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
     int* resultDim = new int[3];
     setDimensions(aDim[0] * bDim[0], aDim[1] * bDim[1], 1, resultDim);
-    int ndim = 3, dims[3] = {resultDim[0], resultDim[1], resultDim[2]};
+    int ndim = 3;
+    size_t dims[3] = {(size_t)resultDim[0], (size_t)resultDim[1], (size_t)resultDim[2]};
 
     plhs[0] = mxCreateNumericArray(ndim,
                                    dims,

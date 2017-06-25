@@ -18,7 +18,7 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
-    int QDim[] = {mxGetDimensions(prhs[0])[0], mxGetDimensions(prhs[0])[1], 1};
+    int QDim[] = {(int)mxGetDimensions(prhs[0])[0], (int)mxGetDimensions(prhs[0])[1], 1};
 
     int zmax = mxGetPr(prhs[1])[0];
 

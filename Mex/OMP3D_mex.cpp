@@ -380,10 +380,10 @@ void mexFunction(int nlhs, mxArray *plhs[],
     int *dyDim = new int[3];
     int *dzDim = new int[3];
 
-    setDimensions(mxGetDimensions(prhs[0])[0], mxGetDimensions(prhs[0])[1], mxGetDimensions(prhs[0])[2], fDim);
-    setDimensions(mxGetDimensions(prhs[1])[0], mxGetDimensions(prhs[1])[1], mxGetDimensions(prhs[1])[2], dxDim);
-    setDimensions(mxGetDimensions(prhs[2])[0], mxGetDimensions(prhs[2])[1], mxGetDimensions(prhs[2])[2], dyDim);
-    setDimensions(mxGetDimensions(prhs[3])[0], mxGetDimensions(prhs[3])[1], mxGetDimensions(prhs[3])[2], dzDim);
+    setDimensions((int)mxGetDimensions(prhs[0])[0], (int)mxGetDimensions(prhs[0])[1], (int)mxGetDimensions(prhs[0])[2], fDim);
+    setDimensions((int)mxGetDimensions(prhs[1])[0], (int)mxGetDimensions(prhs[1])[1], (int)mxGetDimensions(prhs[1])[2], dxDim);
+    setDimensions((int)mxGetDimensions(prhs[2])[0], (int)mxGetDimensions(prhs[2])[1], (int)mxGetDimensions(prhs[2])[2], dyDim);
+    setDimensions((int)mxGetDimensions(prhs[3])[0], (int)mxGetDimensions(prhs[3])[1], (int)mxGetDimensions(prhs[3])[2], dzDim);
 
 	int No = dxDim[0] * dxDim[1] * dxDim[2];
 
@@ -438,16 +438,25 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
 
 
-    int noRe1Dim[] = {1, Di1Dim[1], 1};
+    size_t noRe1DimMxArray[3] = {1, (size_t)Di1Dim[1], 1};
 
-    plhs[0] = mxCreateNumericArray(HNdim, hDim, mxDOUBLE_CLASS, mxREAL);
-    plhs[1] = mxCreateNumericArray(Di1Ndim, Di1Dim, mxDOUBLE_CLASS, mxREAL);
-    plhs[2] = mxCreateNumericArray(Di2Ndim, Di2Dim, mxDOUBLE_CLASS, mxREAL);
-    plhs[3] = mxCreateNumericArray(Di3Ndim, Di3Dim, mxDOUBLE_CLASS, mxREAL);
-    plhs[4] = mxCreateNumericArray(betaNdim, betaDim, mxDOUBLE_CLASS, mxREAL);
-    plhs[5] = mxCreateNumericArray(cNdim, cDim, mxDOUBLE_CLASS, mxREAL);
-    plhs[6] = mxCreateNumericArray(qNdim, qDim, mxDOUBLE_CLASS, mxREAL);
-    plhs[7] = mxCreateNumericArray(noRe1NDim, noRe1Dim, mxDOUBLE_CLASS, mxREAL);
+    size_t hDimMxArray[3] = {(size_t)hDim[0],(size_t)hDim[1],(size_t)hDim[2]};
+    size_t Di1DimMxArray[3] = {(size_t)Di1Dim[0],(size_t)Di1Dim[1],(size_t)Di1Dim[2]};
+    size_t Di2DimMxArray[3] = {(size_t)Di2Dim[0],(size_t)Di2Dim[1],(size_t)Di2Dim[2]};
+    size_t Di3DimMxArray[3] = {(size_t)Di3Dim[0],(size_t)Di3Dim[1],(size_t)Di3Dim[2]};
+    size_t betaDimMxArray[3] = {(size_t)betaDim[0],(size_t)betaDim[1],(size_t)betaDim[2]};
+    size_t cDimMxArray[3]= {(size_t)cDim[0],(size_t)cDim[1],(size_t)cDim[2]};
+    size_t qDimMxArray[3] = {(size_t)qDim[0],(size_t)qDim[1],(size_t)qDim[2]};
+
+
+    plhs[0] = mxCreateNumericArray(HNdim, hDimMxArray, mxDOUBLE_CLASS, mxREAL);
+    plhs[1] = mxCreateNumericArray(Di1Ndim, Di1DimMxArray, mxDOUBLE_CLASS, mxREAL);
+    plhs[2] = mxCreateNumericArray(Di2Ndim, Di2DimMxArray, mxDOUBLE_CLASS, mxREAL);
+    plhs[3] = mxCreateNumericArray(Di3Ndim, Di3DimMxArray, mxDOUBLE_CLASS, mxREAL);
+    plhs[4] = mxCreateNumericArray(betaNdim, betaDimMxArray, mxDOUBLE_CLASS, mxREAL);
+    plhs[5] = mxCreateNumericArray(cNdim, cDimMxArray, mxDOUBLE_CLASS, mxREAL);
+    plhs[6] = mxCreateNumericArray(qNdim, qDimMxArray, mxDOUBLE_CLASS, mxREAL);
+    plhs[7] = mxCreateNumericArray(noRe1NDim, noRe1DimMxArray, mxDOUBLE_CLASS, mxREAL);
 
     memcpy(mxGetPr(plhs[0]), h, sizeof(double) * hDim[0] * hDim[1] * hDim[2]);
     memcpy(mxGetPr(plhs[1]), Di1, sizeof(double) * Di1Dim[0] * Di1Dim[1] * Di1Dim[2]);
@@ -456,7 +465,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     memcpy(mxGetPr(plhs[4]), beta, sizeof(double) * betaDim[0] * betaDim[1] * betaDim[2]);
     memcpy(mxGetPr(plhs[5]), c, sizeof(double) * cDim[0] * cDim[1] * cDim[2]);
     memcpy(mxGetPr(plhs[6]), q, sizeof(double) * qDim[0] * qDim[1] * qDim[2]);
-    memcpy(mxGetPr(plhs[7]), noRe1, sizeof(double) * noRe1Dim[1]); //todo Define numat
+    memcpy(mxGetPr(plhs[7]), noRe1, sizeof(double) * Di1Dim[1]); //todo Define numat
 
 
 

@@ -16,12 +16,12 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
-    int betaDim[] = {mxGetDimensions(prhs[0])[0], mxGetDimensions(prhs[0])[1], 1};
-    int qkDim[] = {mxGetDimensions(prhs[1])[0], mxGetDimensions(prhs[1])[1], 1};
+    int betaDim[] = {(int)mxGetDimensions(prhs[0])[0], (int)mxGetDimensions(prhs[0])[1], 1};
+    int qkDim[] = {(int)mxGetDimensions(prhs[1])[0], (int)mxGetDimensions(prhs[1])[1], 1};
 
     double* qk = mxGetPr(prhs[1]);
 
-    int newAtomDim[] = {mxGetDimensions(prhs[2])[0], mxGetDimensions(prhs[2])[1], 1};
+    int newAtomDim[] = {(int)mxGetDimensions(prhs[2])[0], (int)mxGetDimensions(prhs[2])[1], 1};
     double* newAtom = mxGetPr(prhs[2]);
 
     double nork = mxGetPr(prhs[3])[0];

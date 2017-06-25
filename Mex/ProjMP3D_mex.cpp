@@ -8,37 +8,37 @@ void mexFunction(int nlhs, mxArray *plhs[],
                  int nrhs, const mxArray *prhs[]) {
 
 
-    int hDim[] = {mxGetDimensions(prhs[0])[0], mxGetDimensions(prhs[0])[1], mxGetDimensions(prhs[0])[2]};
+    int hDim[] = {(int)mxGetDimensions(prhs[0])[0], (int)mxGetDimensions(prhs[0])[1], (int)mxGetDimensions(prhs[0])[2]};
     double* h = mxGetPr(prhs[0]);
    
   
     //
 	
-    int reDim[] = {mxGetDimensions(prhs[1])[0], mxGetDimensions(prhs[1])[1], mxGetDimensions(prhs[1])[2]};
+    int reDim[] = {(int)mxGetDimensions(prhs[1])[0], (int)mxGetDimensions(prhs[1])[1], (int)mxGetDimensions(prhs[1])[2]};
     double* re = mxGetPr(prhs[1]);
    
 
     //
 
-    int v1Dim[] = {mxGetDimensions(prhs[2])[0], mxGetDimensions(prhs[2])[1], 1};
+    int v1Dim[] = {(int)mxGetDimensions(prhs[2])[0], (int)mxGetDimensions(prhs[2])[1], 1};
     double* v1 = mxGetPr(prhs[2]);
 
 
     //
 
-    int v2Dim[] = {mxGetDimensions(prhs[3])[0], mxGetDimensions(prhs[3])[1], 1};
+    int v2Dim[] = {(int)mxGetDimensions(prhs[3])[0], (int)mxGetDimensions(prhs[3])[1], 1};
     double* v2 = mxGetPr(prhs[3]);
 
     //
 
 
-    int v3Dim[] = {mxGetDimensions(prhs[4])[0], mxGetDimensions(prhs[4])[1], 1};
+    int v3Dim[] = {(int)mxGetDimensions(prhs[4])[0], (int)mxGetDimensions(prhs[4])[1], 1};
     double* v3 = mxGetPr(prhs[4]);
 	
     //
 
 
-    int cDim[] = {mxGetDimensions(prhs[5])[0], mxGetDimensions(prhs[5])[1], 1};
+    int cDim[] = {(int)mxGetDimensions(prhs[5])[0], (int)mxGetDimensions(prhs[5])[1], 1};
     double* c = mxGetPr(prhs[5]);
 
 

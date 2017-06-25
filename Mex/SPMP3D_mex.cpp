@@ -7,7 +7,6 @@
 
 using namespace std;
 
-
 int validateIndex(double indk, double *Di, int *DiDim) {
     for (int i = 0; i < DiDim[0] * DiDim[1] * DiDim[2]; i++) {
         if (Di[i] == indk) {
@@ -17,8 +16,6 @@ int validateIndex(double indk, double *Di, int *DiDim) {
     //mexErrMsgTxt("Index not in dictionary");
     return 0;
 }
-
-
 
 
 void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim, double* Vz, int* VzDim,

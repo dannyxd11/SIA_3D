@@ -6,8 +6,8 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
-    int QDim[] = {mxGetDimensions(prhs[0])[0], mxGetDimensions(prhs[0])[1], 1};
-    int newAtomDim[] = {mxGetDimensions(prhs[1])[0], mxGetDimensions(prhs[1])[1], 1};
+    int QDim[] = {(int)mxGetDimensions(prhs[0])[0], (int)mxGetDimensions(prhs[0])[1], 1};
+    int newAtomDim[] = {(int)mxGetDimensions(prhs[1])[0], (int)mxGetDimensions(prhs[1])[1], 1};
 
     double* newAtom = mxGetPr(prhs[1]);
 

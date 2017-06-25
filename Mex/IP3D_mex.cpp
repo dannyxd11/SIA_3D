@@ -29,28 +29,28 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
 
     int* reDim = new int[3];  
-    setDimensions(mxGetDimensions(prhs[0])[0], mxGetDimensions(prhs[0])[1], mxGetDimensions(prhs[0])[2], reDim);
+    setDimensions((int)mxGetDimensions(prhs[0])[0], (int)mxGetDimensions(prhs[0])[1], (int)mxGetDimensions(prhs[0])[2], reDim);
     double* reElements = mxGetPr(prhs[0]);
 
 
     //
 
     int* dxDim = new int[3];
-    setDimensions(mxGetDimensions(prhs[1])[0], mxGetDimensions(prhs[1])[1], 1, dxDim);
+    setDimensions((int)mxGetDimensions(prhs[1])[0], (int)mxGetDimensions(prhs[1])[1], 1, dxDim);
     double* dxElements = mxGetPr(prhs[1]);
 
 
     //
 
     int* dyDim = new int[3];
-    setDimensions(mxGetDimensions(prhs[2])[0], mxGetDimensions(prhs[2])[1], 1, dyDim);
+    setDimensions((int)mxGetDimensions(prhs[2])[0], (int)mxGetDimensions(prhs[2])[1], 1, dyDim);
     double* dyElements = mxGetPr(prhs[2]);
 
     //
 
 
     int* dzDim = new int[3];
-    setDimensions(mxGetDimensions(prhs[3])[0], mxGetDimensions(prhs[3])[1], 1, dzDim);
+    setDimensions((int)mxGetDimensions(prhs[3])[0], (int)mxGetDimensions(prhs[3])[1], 1, dzDim);
     double* dzElements = mxGetPr(prhs[3]);
 
 
@@ -59,7 +59,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
     int* ccDim = new int[3];
     setDimensions(dxDim[1], dyDim[1], dzDim[1], ccDim);
     nlhs = 1;
-    int ndim = 3, dims[3] = {ccDim[0], ccDim[1], ccDim[2]};
+    int ndim = 3; 
+    size_t dims[3] = {(size_t)ccDim[0], (size_t)ccDim[1], (size_t)ccDim[2]};
     plhs[0] = mxCreateNumericArray(ndim,
                                    dims,
                                    mxDOUBLE_CLASS,
