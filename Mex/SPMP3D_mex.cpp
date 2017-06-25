@@ -24,7 +24,6 @@ int validateIndex(double indk, double *Di, int *DiDim) {
 void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim, double* Vz, int* VzDim,
             double tol, double No, double toln, int lstep, int Max, int Maxp, int* indx, int* indy, int* indz,
             double* h, int* hDim, double* c, int* cDim, double* Set_ind, int* numat){
-// h, c, set_ind
 
     for(int i = 0; i < VxDim[0] * VyDim[0] * VzDim[0]; i++){
         c[i] = 0;
@@ -79,8 +78,6 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
      *      cc=zeros(Nx,Ny,Nz);
      */
 
-//    double* cp = new double[Nx * Ny * Nz]();
-//    int cpDim[] = {Nx, Ny, Nz};
     double* cc = new double[Nx * Ny * Nz]();
     int ccDim[] = {Nx, Ny, Nz};
 
@@ -254,8 +251,6 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
                 int maxind = max(cc, ccDim);
                 ind2sub(ccDim, maxind, q);
 
-                //return;
-
                 /*
                  * MATLAB ≈
                  *          if max_c < tol2
@@ -274,7 +269,6 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
                     delete [] Row;
                     delete [] multResult1;
 
-                    //delete [] cp;
                     delete [] cc;
 
                     delete [] Dix;
@@ -312,13 +306,13 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
             
             int vq[] = {q[0], q[1], q[2]};
             double cscra = get3DElement(cc, ccDim, q[0], q[1], q[2]);
-            
+
             if (numat[0] == 0) {
                 Set_ind[0] = vq[0];
                 Set_ind[1] = vq[1];
-                Set_ind[2] = vq[2];
-                numat[0] += 1;
+                Set_ind[2] = vq[2]; 
                 c[numat[0]] = cscra;
+                numat[0] += 1;
             } else {
 
                 /*
@@ -343,19 +337,16 @@ void SPMP3D(double* f, int* fDim, double* Vx, int* VxDim, double* Vy, int* VyDim
                  *         Set_ind =[Set_ind;vq];
                  *         numat=numat+1;
                  */
-
                 if (exists == 0) {
                     Set_ind[(numat[0]) * 3] = vq[0];
                     Set_ind[(numat[0]) * 3 + 1] = vq[1];
                     Set_ind[(numat[0]) * 3 + 2] = vq[2];
-                    numat[0] += 1;
                     c[numat[0]] = cscra;
+                    numat[0] += 1;
                 }else{
-                	c[index] += cscra;
+                	c[index] += cscra;                    
                 }
             }
-
-
 
             /*
              * MATLAB ≈
@@ -576,15 +567,15 @@ void mexFunction(int nlhs, mxArray *plhs[],
         indy = (int *) mxGetData(prhs[11]);
         indz = (int *) mxGetData(prhs[12]);
     }else if(nrhs > 10 && nrhs != 13){ mexErrMsgTxt("Not enough input arguments: <fs, Dx, Dy, Dz, tol, No, toln, lstep, Max, Maxp, indx, indy, indz>\nCustom Indexing not yet supported"); return; }
-    int fDim[] = {mxGetDimensions(prhs[0])[0], mxGetDimensions(prhs[0])[1],mxGetDimensions(prhs[0])[2]};
-    int VxDim[] = {mxGetDimensions(prhs[1])[0], mxGetDimensions(prhs[1])[1],mxGetDimensions(prhs[1])[2]};
-    int VyDim[] = {mxGetDimensions(prhs[2])[0], mxGetDimensions(prhs[2])[1],mxGetDimensions(prhs[2])[2]};
-    int VzDim[] = {mxGetDimensions(prhs[3])[0], mxGetDimensions(prhs[3])[1],mxGetDimensions(prhs[3])[2]};
-
+    int fDim[] =  {(int)mxGetDimensions(prhs[0])[0], (int)mxGetDimensions(prhs[0])[1], (int)mxGetDimensions(prhs[0])[2]};
+    int VxDim[] = {(int)mxGetDimensions(prhs[1])[0], (int)mxGetDimensions(prhs[1])[1], (int)mxGetDimensions(prhs[1])[2]};
+    int VyDim[] = {(int)mxGetDimensions(prhs[2])[0], (int)mxGetDimensions(prhs[2])[1], (int)mxGetDimensions(prhs[2])[2]};
+    int VzDim[] = {(int)mxGetDimensions(prhs[3])[0], (int)mxGetDimensions(prhs[3])[1], (int)mxGetDimensions(prhs[3])[2]};
 
 
     int hDims = 3; int hDim[] = {VxDim[0], VyDim[0], VzDim[0]};
-    plhs[0] = mxCreateNumericArray(hDims, hDim, mxDOUBLE_CLASS, mxREAL);
+    size_t hDimMxArray[3] = {static_cast<size_t>(hDim[0]), static_cast<size_t>(hDim[1]), static_cast<size_t>(hDim[2])};
+    plhs[0] = mxCreateNumericArray(hDims, hDimMxArray, mxDOUBLE_CLASS, mxREAL);
     double* h = mxGetPr(plhs[0]);
 
 
@@ -595,24 +586,32 @@ void mexFunction(int nlhs, mxArray *plhs[],
     int numat = 0;
 	int cDims = 3;
 	Set_ind = new double[3 * Max]();
+        
 
 	SPMP3D(f, fDim, Vx, VxDim, Vy, VyDim, Vz, VzDim, tol, No, toln, lstep, Max, Maxp, indx, indy, indz, h, hDim, c, cDim, Set_ind, &numat);
 
-    int Set_ind_dims = 3, Set_ind_dim[3] = {numat, 3, 1};
+    int Set_ind_dims = 3; 
 
-    plhs[2] = mxCreateNumericArray(cDims, cDim, mxDOUBLE_CLASS, mxREAL);
+    // Dimensions for mxArray need to be size_t
+    size_t Set_ind_dim[3] = {static_cast<size_t>(numat), 3, 1};
+    size_t cDimMxArray[3] = {static_cast<size_t>(cDim[0]), static_cast<size_t>(cDim[1]), static_cast<size_t>(cDim[2])};
+
+    // Create set_ind and c to be returned to MATLAB
+    plhs[2] = mxCreateNumericArray(cDims, cDimMxArray, mxDOUBLE_CLASS, mxREAL);
     plhs[1] = mxCreateNumericArray(Set_ind_dims, Set_ind_dim, mxDOUBLE_CLASS, mxREAL);
-    //plhs[2] = mxCreateNumericArray(Set_ind_dims, Set_ind_dim, mxDOUBLE_CLASS, mxREAL);
 
     double* tempSetT = new double[numat * 3];
     int tempSetDimT[] = {numat, 3, 1};
     int tempSetDim[] = {3, numat, 1};
 
+    for(int i = 0; i < numat * 3; i++){
+        Set_ind[i] += 1;
+    }
+
     transpose(Set_ind, tempSetDim, tempSetT, tempSetDimT);
 
-    //delete [] Set_ind;
-    //Set_ind = tempSetT;
 
+    // Correct Indexing before returning to MATLAB
     memcpy(mxGetPr(plhs[2]), c, cDim[0] * cDim[1] * cDim[2] * sizeof(double));
     memcpy(mxGetPr(plhs[1]), tempSetT, (numat) * 3 * sizeof(double));
 
