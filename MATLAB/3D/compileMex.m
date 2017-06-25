@@ -12,6 +12,7 @@ mex OMP3D_mex.cpp -lmwblas;
 mex kronecker.cpp -lmwblas;
 mex o_reorthogonalize.cpp -lmwblas;
 mex reorthogonalize.cpp -lmwblas;
+mex orthogonalize.cpp -lmwblas;
 mex biorthogonalize.cpp -lmwblas;
 
 cd(workingDir)
