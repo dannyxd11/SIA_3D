@@ -1,9 +1,9 @@
-    Here MEX C++ / Cuda routines for sparse image approximation are presented as well as their MATLAB counterparts.  
-    OMP3D has been implemented in MATLAB and MEX C++ (Stability issues currently prevent block sizes larger than 8 x 8)
-    SPMP3D has been implemented in MATLAB and MEX C++, whilst a CUDA implementation has been outlined to utilise GPU.
-    MEX Files / CUDA Routine Copyright (C) 2017  Daniel Whitehouse, dannyxd@me.com, Aston University
-    MATLAB Routine Copyright (C) 2017, Laura Rebollo-Neira, l.rebollo-neira@aston.ac.uk, Aston University,  Full Details -> http://www.nonlinear-approx.info/
-    Part of a Final Year Project for the Degree of CS + Mathematics at Aston University
+    MATLAB and C++ files for greedy Matching Pursuit Strategies dedicated to 3-dimensions.
+    Self-Projected Matching Pursuit (SPMP3D) and Orthogonal Matching Pursuit (OMP3D) have been provided.
+    
+    The CUDA application is currently held on a private repository and will be released in due course.
+    
+    For more information visit: <https://dannyxd11.github.io/SIA_3D/docs/>
     
 
     This program is free software: you can redistribute it and/or modify
