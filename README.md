@@ -3,7 +3,7 @@
     
     The CUDA application is currently held on a private repository and will be released in due course.
     
-    For more information visit: <https://dannyxd11.github.io/SIA_3D/docs/>
+    For more information visit: <dan-whitehouse.me/fyp>
     
 
     This program is free software: you can redistribute it and/or modify
