@@ -1,9 +1,5 @@
     MATLAB and C++ files for greedy Matching Pursuit Strategies dedicated to 3-dimensions.
-    Self-Projected Matching Pursuit (SPMP3D) and Orthogonal Matching Pursuit (OMP3D) have been provided.
-    
-    The CUDA application is currently held on a private repository and will be released in due course.
-    
-    For more information visit: <dan-whitehouse.me/fyp>
+    Self-Projected Matching Pursuit (SPMP3D) and Orthogonal Matching Pursuit (OMP3D) have been provided
     
 
     This program is free software: you can redistribute it and/or modify
