@@ -34,7 +34,7 @@ heic1209a.png courtesy of the ESA - <https://www.spacetelescope.org/>
 
 Licence:
 
-MEX Files / CUDA Routine Copyright (C) 2017  [Daniel Whitehouse](https://dan-whitehouse.me), <dannyxd@me.com>, Aston University
+MEX Files / CUDA Routine Copyright (C) 2017  [Daniel Whitehouse](https://github.com/dannyxd11), Aston University
 MATLAB Routine Copyright (C) 2017, [Laura Rebollo-Neira](http://www.aston.ac.uk/eas/staff/a-z/dr-laura-rebollo-neira/), [Mathematics Department](http://www.aston.ac.uk/eas/about-eas/academic-groups/mathematics/), Aston University
 
 
